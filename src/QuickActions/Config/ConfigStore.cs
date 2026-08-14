@@ -19,8 +19,7 @@ public sealed class ConfigStore
     private static readonly string DefaultConfigJson =
         """
         [
-          { "hotkey": "F13", "action": "display_mode", "args": { "mode": "internal" } },
-          { "hotkey": "F14", "action": "display_mode", "args": { "mode": "extend" } }
+          { "hotkey": "F13", "action": "display_mode", "args": { "mode": "toggle", "modes": ["internal", "extend"] } }
         ]
         """;
 

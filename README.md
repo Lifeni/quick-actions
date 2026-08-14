@@ -39,12 +39,14 @@ dotnet publish src/QuickActions/QuickActions.csproj -c Release -r win-x64 --self
 
 ```json
 [
-  { "hotkey": "F13",              "action": "display_mode", "args": { "mode": "internal" } },
-  { "hotkey": "Ctrl+Shift+F14",   "action": "display_mode", "args": { "mode": "extend" } }
+  { "hotkey": "F13", "action": "display_mode", "args": { "mode": "toggle", "modes": ["internal", "extend"] } }
 ]
 ```
 
-`display_mode` 支持 `internal`(仅当前屏幕)、`extend`(扩展)、`external`(仅外接)、`clone`(复制)。
+`display_mode` 支持:
+
+- `internal`(仅当前屏幕)、`extend`(扩展)、`external`(仅外接)、`clone`(复制):直接切换到指定模式;若已是该模式则不执行、不弹通知。
+- `toggle`:自动判断当前拓扑,在 `modes`(默认 `["internal","extend"]`)中循环切换——一个键完成"仅当前屏幕 ↔ 扩展"。
 
 ## 目录结构
 

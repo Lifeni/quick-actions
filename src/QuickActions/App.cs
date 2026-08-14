@@ -21,7 +21,7 @@ public sealed class App : IDisposable
 
         _tray = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = LoadTrayIcon(),
             Text = "QuickActions",
             Visible = true,
         };
@@ -71,15 +71,38 @@ public sealed class App : IDisposable
     {
         try
         {
-            string result = action.Execute(args);
-            _log.Info($"[{action.Name}] {result}");
-            _tray.ShowBalloonTip(2000, "QuickActions", result, ToolTipIcon.Info);
+            var result = action.Execute(args);
+            if (result.Changed)
+            {
+                _log.Info($"[{action.Name}] {result.Message}");
+                _tray.ShowBalloonTip(2000, "QuickActions", result.Message, ToolTipIcon.Info);
+            }
+            else
+            {
+                _log.Info($"[{action.Name}] {result.Message}(未变化,不提示)");
+            }
         }
         catch (Exception ex)
         {
             _log.Error($"[{action.Name}] 执行失败: {ex}");
             _tray.ShowBalloonTip(3000, "QuickActions", $"动作失败: {ex.Message}", ToolTipIcon.Error);
         }
+    }
+
+    /// <summary>加载嵌入资源中的图标;失败时回退系统默认图标。</summary>
+    private static Icon LoadTrayIcon()
+    {
+        try
+        {
+            using var stream = typeof(App).Assembly.GetManifestResourceStream("QuickActions.Assets.quick-actions.ico");
+            if (stream is not null)
+                return new Icon(stream);
+        }
+        catch
+        {
+            // 回退到系统图标
+        }
+        return SystemIcons.Application;
     }
 
     public void Dispose()

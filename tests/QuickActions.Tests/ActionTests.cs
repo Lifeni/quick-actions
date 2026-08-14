@@ -16,40 +16,6 @@ public class DisplayModeActionTests
         Assert.Equal(expectedFlag, DisplayModeAction.TopologyFor(mode));
     }
 
-    [Theory]
-    [InlineData("INTERNAL")]
-    [InlineData("Extend")]
-    [InlineData("EXT")]
-    public void ExtractMode_StringArg_IsTrimmedAndLowercased(string input)
-    {
-        Assert.Equal(input.Trim().ToLowerInvariant(), DisplayModeAction.ExtractMode(input));
-    }
-
-    [Fact]
-    public void ExtractMode_JsonObjectArg_ReadsModeProperty()
-    {
-        var json = JsonDocument.Parse("""{ "mode": "extend" }""").RootElement;
-
-        Assert.Equal("extend", DisplayModeAction.ExtractMode(json));
-    }
-
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" ")]
-    public void ExtractMode_MissingOrBlank_Throws(string? input)
-    {
-        Assert.Throws<ArgumentException>(() => DisplayModeAction.ExtractMode(input));
-    }
-
-    [Fact]
-    public void ExtractMode_JsonWithoutMode_Throws()
-    {
-        var json = JsonDocument.Parse("""{ "other": 1 }""").RootElement;
-
-        Assert.Throws<ArgumentException>(() => DisplayModeAction.ExtractMode(json));
-    }
-
     [Fact]
     public void TopologyFor_UnknownMode_Throws()
     {
@@ -57,9 +23,137 @@ public class DisplayModeActionTests
     }
 
     [Fact]
+    public void ParseArgs_StringArg_IsTrimmedAndLowercased()
+    {
+        Assert.Equal(("extend", Array.Empty<string>()), DisplayModeAction.ParseArgs(" Extend "));
+    }
+
+    [Fact]
+    public void ParseArgs_JsonObjectArg_ReadsModeProperty()
+    {
+        var json = JsonDocument.Parse("""{ "mode": "extend" }""").RootElement;
+
+        Assert.Equal(("extend", Array.Empty<string>()), DisplayModeAction.ParseArgs(json));
+    }
+
+    [Fact]
+    public void ParseArgs_JsonWithToggleModes_ReadsBoth()
+    {
+        var json = JsonDocument.Parse("""{ "mode": "toggle", "modes": ["internal", "extend"] }""").RootElement;
+
+        var (mode, modes) = DisplayModeAction.ParseArgs(json);
+
+        Assert.Equal("toggle", mode);
+        Assert.Equal(new[] { "internal", "extend" }, modes);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void ParseArgs_MissingOrBlank_Throws(string? input)
+    {
+        Assert.Throws<ArgumentException>(() => DisplayModeAction.ParseArgs(input));
+    }
+
+    [Fact]
+    public void ParseArgs_JsonWithoutMode_Throws()
+    {
+        var json = JsonDocument.Parse("""{ "other": 1 }""").RootElement;
+
+        Assert.Throws<ArgumentException>(() => DisplayModeAction.ParseArgs(json));
+    }
+
+    [Theory]
+    [InlineData("internal", "internal", false)]
+    [InlineData("extend", "internal", true)]
+    [InlineData("internal", "extend", true)]
+    public void Decide_ExplicitMode_ComparesWithCurrent(string current, string requested, bool expectedChange)
+    {
+        var (target, isChange) = DisplayModeAction.Decide(current, requested, Array.Empty<string>());
+
+        Assert.Equal(requested, target);
+        Assert.Equal(expectedChange, isChange);
+    }
+
+    [Fact]
+    public void Decide_UnknownCurrent_ConservativelyApplies()
+    {
+        var (target, isChange) = DisplayModeAction.Decide(null, "internal", Array.Empty<string>());
+
+        Assert.Equal("internal", target);
+        Assert.True(isChange);
+    }
+
+    [Theory]
+    [InlineData("internal", "extend")]
+    [InlineData("extend", "internal")]
+    public void PickToggleTarget_TwoModeList_CyclesToOther(string current, string expected)
+    {
+        string[] modes = { "internal", "extend" };
+
+        Assert.Equal(expected, DisplayModeAction.PickToggleTarget(current, modes));
+    }
+
+    [Fact]
+    public void PickToggleTarget_ThreeModes_CyclesInOrder()
+    {
+        string[] modes = { "internal", "clone", "extend" };
+
+        Assert.Equal("clone", DisplayModeAction.PickToggleTarget("internal", modes));
+        Assert.Equal("internal", DisplayModeAction.PickToggleTarget("extend", modes));
+    }
+
+    [Fact]
+    public void PickToggleTarget_CurrentNotInList_FallsBackToFirst()
+    {
+        string[] modes = { "internal", "extend" };
+
+        Assert.Equal("internal", DisplayModeAction.PickToggleTarget("clone", modes));
+    }
+
+    [Fact]
+    public void PickToggleTarget_UnknownCurrent_ReturnsFirst()
+    {
+        Assert.Equal("internal", DisplayModeAction.PickToggleTarget(null, new[] { "internal", "extend" }));
+    }
+
+    [Fact]
+    public void PickToggleTarget_EmptyModes_DefaultsToInternalExtend()
+    {
+        Assert.Equal("extend", DisplayModeAction.PickToggleTarget("internal", Array.Empty<string>()));
+        Assert.Equal("internal", DisplayModeAction.PickToggleTarget(null, Array.Empty<string>()));
+    }
+
+    [Fact]
+    public void Decide_ToggleMode_ResolvesTargetAndChange()
+    {
+        string[] modes = { "internal", "extend" };
+
+        var (target, isChange) = DisplayModeAction.Decide("internal", "toggle", modes);
+
+        Assert.Equal("extend", target);
+        Assert.True(isChange);
+    }
+
+    [Fact]
     public void Action_ExposesExpectedName()
     {
         Assert.Equal("display_mode", new DisplayModeAction().Name);
+    }
+}
+
+public class DisplayTopologyTests
+{
+    [Fact]
+    public void GetCurrentMode_ReturnsKnownModeOrNull()
+    {
+        // 只读查询,不修改显示状态;任何机器上都应返回合法拓扑名或 null(查询失败)
+        string? mode = DisplayTopology.GetCurrentMode();
+
+        Assert.True(mode is null
+            or "internal" or "clone" or "extend" or "external",
+            $"实际值: {mode ?? "<null>"}");
     }
 }
 

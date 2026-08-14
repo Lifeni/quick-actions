@@ -20,8 +20,20 @@ internal static class NativeMethods
     public const uint SDC_TOPOLOGY_CLONE = 0x00000002;
     public const uint SDC_TOPOLOGY_EXTEND = 0x00000004;
     public const uint SDC_TOPOLOGY_EXTERNAL = 0x00000008;
-    public const uint SDC_USE_SUPPLIED_DISPLAY_CONFIG = 0x00000020;
     public const uint SDC_APPLY = 0x00000080;
+
+    // QueryDisplayConfig flags
+    public const uint QDC_ONLY_ACTIVE_PATHS = 0x00000002;
+    public const uint DISPLAYCONFIG_PATH_ACTIVE = 0x00000001;
+
+    public const uint ERROR_SUCCESS = 0;
+    public const uint ERROR_INSUFFICIENT_BUFFER = 122;
+
+    // DISPLAYCONFIG_OUTPUT_TECHNOLOGY(内嵌面板类型)
+    public const uint OUTPUT_TECHNOLOGY_INTERNAL = 0x80000000;
+    public const uint OUTPUT_TECHNOLOGY_LVDS = 0xFFFFFFF8;
+    public const uint OUTPUT_TECHNOLOGY_DISPLAYPORT_EMBEDDED = 0xFFFFFFF5;
+    public const uint OUTPUT_TECHNOLOGY_UDI_EMBEDDED = 0xFFFFFFF3;
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -38,4 +50,13 @@ internal static class NativeMethods
         uint numModeInfoArrayElements,
         IntPtr modeInfoArray,
         uint flags);
+
+    [DllImport("user32.dll")]
+    public static extern int QueryDisplayConfig(
+        uint flags,
+        ref uint numPathArrayElements,
+        [In, Out] DisplayConfigPathInfo[]? pathArray,
+        ref uint numModeArrayElements,
+        [In, Out] DisplayConfigModeInfo[]? modeInfoArray,
+        out uint currentTopologyId);
 }

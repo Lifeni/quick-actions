@@ -7,38 +7,78 @@ namespace QuickActions.Actions;
 /// <summary>
 /// 切换投影模式,基于 SetDisplayConfig 直接应用拓扑(比 DisplaySwitch.exe 可靠:同步、可验证结果)。
 /// args 支持 {"mode": "internal"} 或字符串 "internal";mode 取值:
-/// internal(仅当前屏幕) / extend(扩展) / external(仅外接) / clone(复制)。
+/// internal(仅当前屏幕) / extend(扩展) / external(仅外接) / clone(复制),
+/// 以及 "toggle":在 args.modes(默认 ["internal","extend"])中自动判断当前模式并切换到下一个。
+/// 目标模式与当前一致时返回 Changed=false,宿主不弹通知。
 /// </summary>
 public sealed class DisplayModeAction : IAction
 {
     public string Name => "display_mode";
 
-    public string Execute(object? args)
+    public ActionResult Execute(object? args)
     {
-        string mode = ExtractMode(args);
-        uint topology = TopologyFor(mode);
+        var (requested, toggleModes) = ParseArgs(args);
+        var (target, isChange) = Decide(DisplayTopology.GetCurrentMode(), requested, toggleModes);
 
-        int hr = NativeMethods.SetDisplayConfig(
-            0, IntPtr.Zero, 0, IntPtr.Zero,
-            topology | NativeMethods.SDC_USE_SUPPLIED_DISPLAY_CONFIG | NativeMethods.SDC_APPLY);
+        if (!isChange)
+            return new ActionResult(false, $"当前已是{ModeDisplayName(target)}");
 
-        if (hr != 0)
-            throw new InvalidOperationException($"SetDisplayConfig 失败 (Win32 错误 {hr})");
-
-        return $"已切换显示模式: {ModeDisplayName(mode)}";
+        Apply(target);
+        return new ActionResult(true, $"已切换显示模式: {ModeDisplayName(target)}");
     }
 
-    internal static string ExtractMode(object? args)
+    /// <summary>决定目标模式与是否真正变化。纯函数,便于测试。</summary>
+    internal static (string Target, bool IsChange) Decide(string? current, string requested, string[] toggleModes)
     {
-        if (args is string s && !string.IsNullOrWhiteSpace(s))
-            return s.Trim().ToLowerInvariant();
+        string target = requested == "toggle" ? PickToggleTarget(current, toggleModes) : requested;
+        // 当前拓扑无法判定(null)时保守执行切换,不阻塞用户操作
+        return (target, current is null || target != current);
+    }
 
-        if (args is JsonElement e && e.ValueKind == JsonValueKind.Object
-            && e.TryGetProperty("mode", out var mode)
-            && mode.ValueKind == JsonValueKind.String)
-            return mode.GetString()!.Trim().ToLowerInvariant();
+    /// <summary>toggle 目标选择:当前模式在候选列表中取下一个(循环),否则取第一个。</summary>
+    internal static string PickToggleTarget(string? current, string[] toggleModes)
+    {
+        string[] modes = toggleModes.Length > 0 ? toggleModes : new[] { "internal", "extend" };
+        if (current is null)
+            return modes[0];
+        int index = Array.IndexOf(modes, current);
+        return index >= 0 ? modes[(index + 1) % modes.Length] : modes[0];
+    }
 
-        throw new ArgumentException("缺少 args.mode (internal|extend|external|clone)");
+    internal static (string Mode, string[] Modes) ParseArgs(object? args)
+    {
+        if (args is JsonElement element && element.ValueKind == JsonValueKind.Object)
+        {
+            string? mode = element.TryGetProperty("mode", out var modeProp)
+                && modeProp.ValueKind == JsonValueKind.String
+                ? modeProp.GetString()!.Trim().ToLowerInvariant()
+                : null;
+
+            string[] modes = element.TryGetProperty("modes", out var modesProp)
+                && modesProp.ValueKind == JsonValueKind.Array
+                ? modesProp.EnumerateArray()
+                    .Where(x => x.ValueKind == JsonValueKind.String)
+                    .Select(x => x.GetString()!.Trim().ToLowerInvariant())
+                    .ToArray()
+                : Array.Empty<string>();
+
+            if (string.IsNullOrEmpty(mode))
+                throw new ArgumentException("缺少 args.mode (internal|extend|external|clone|toggle)");
+            return (mode, modes);
+        }
+
+        if (args is string text && !string.IsNullOrWhiteSpace(text))
+            return (text.Trim().ToLowerInvariant(), Array.Empty<string>());
+
+        throw new ArgumentException("缺少 args.mode (internal|extend|external|clone|toggle)");
+    }
+
+    internal static void Apply(string mode)
+    {
+        uint topology = TopologyFor(mode);
+        int hr = NativeMethods.SetDisplayConfig(0, IntPtr.Zero, 0, IntPtr.Zero, topology | NativeMethods.SDC_APPLY);
+        if (hr != 0)
+            throw new InvalidOperationException($"SetDisplayConfig 失败 (Win32 错误 {hr})");
     }
 
     internal static uint TopologyFor(string mode) => mode switch

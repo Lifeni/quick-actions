@@ -4,58 +4,39 @@ namespace QuickActions.Actions;
 
 /// <summary>
 /// 只读查询当前显示拓扑(不修改显示状态)。
-/// 判定规则:单条激活路径 → target 为内嵌面板则 internal,否则 external;
-/// 多条激活路径 → 共享同一 source 则为 clone,否则 extend。
+/// 使用 QDC_DATABASE_CURRENT + currentTopologyId 输出,由系统给出权威拓扑分类
+/// (DISPLAYCONFIG_TOPOLOGY_ID),不依赖路径启发式判定。
 /// </summary>
 public static class DisplayTopology
 {
+    // DISPLAYCONFIG_TOPOLOGY_ID
+    private const uint TopologyInternal = 1;
+    private const uint TopologyClone = 2;
+    private const uint TopologyExtend = 4;
+    private const uint TopologyExternal = 8;
+
     /// <summary>返回当前拓扑名:"internal" | "clone" | "extend" | "external";无法判定时返回 null。</summary>
     public static string? GetCurrentMode()
     {
         try
         {
-            // 两趟查询:先取数组大小,再取数据
             uint numPath = 0, numMode = 0;
-            int first = NativeMethods.QueryDisplayConfig(
-                NativeMethods.QDC_ONLY_ACTIVE_PATHS, ref numPath, null, ref numMode, null, out _);
-            if (first != NativeMethods.ERROR_SUCCESS && first != NativeMethods.ERROR_INSUFFICIENT_BUFFER)
+            int sizeRet = NativeMethods.GetDisplayConfigBufferSizes(
+                NativeMethods.QDC_DATABASE_CURRENT, ref numPath, ref numMode);
+            if (sizeRet != NativeMethods.ERROR_SUCCESS)
                 return null;
             if (numPath == 0)
                 return null;
 
             var paths = new DisplayConfigPathInfo[numPath];
             var modes = new DisplayConfigModeInfo[numMode];
-            int second = NativeMethods.QueryDisplayConfig(
-                NativeMethods.QDC_ONLY_ACTIVE_PATHS, ref numPath, paths, ref numMode, modes, out _);
-            if (second != NativeMethods.ERROR_SUCCESS)
+            uint topologyId = 0;
+            int ret = NativeMethods.QueryDisplayConfig(
+                NativeMethods.QDC_DATABASE_CURRENT, ref numPath, paths, ref numMode, modes, out topologyId);
+            if (ret != NativeMethods.ERROR_SUCCESS)
                 return null;
 
-            int count = (int)Math.Min(numPath, (uint)paths.Length);
-            var active = new List<DisplayConfigPathInfo>(count);
-            for (int i = 0; i < count; i++)
-            {
-                if ((paths[i].Flags & NativeMethods.DISPLAYCONFIG_PATH_ACTIVE) != 0)
-                    active.Add(paths[i]);
-            }
-
-            if (active.Count == 0)
-                return null;
-
-            if (active.Count == 1)
-                return IsEmbeddedTarget(active[0].TargetInfo.OutputTechnology) ? "internal" : "external";
-
-            var firstSource = active[0].SourceInfo;
-            for (int i = 1; i < active.Count; i++)
-            {
-                var source = active[i].SourceInfo;
-                if (source.AdapterIdLow != firstSource.AdapterIdLow
-                    || source.AdapterIdHigh != firstSource.AdapterIdHigh
-                    || source.SourceId != firstSource.SourceId)
-                {
-                    return "extend";
-                }
-            }
-            return "clone";
+            return TopologyName(topologyId);
         }
         catch
         {
@@ -64,12 +45,13 @@ public static class DisplayTopology
         }
     }
 
-    private static bool IsEmbeddedTarget(uint outputTechnology)
+    /// <summary>拓扑 ID → 模式名;未知值返回 null。纯函数,便于测试。</summary>
+    internal static string? TopologyName(uint topologyId) => topologyId switch
     {
-        if ((outputTechnology & NativeMethods.OUTPUT_TECHNOLOGY_INTERNAL) != 0)
-            return true;
-        return outputTechnology is NativeMethods.OUTPUT_TECHNOLOGY_LVDS
-            or NativeMethods.OUTPUT_TECHNOLOGY_DISPLAYPORT_EMBEDDED
-            or NativeMethods.OUTPUT_TECHNOLOGY_UDI_EMBEDDED;
-    }
+        TopologyInternal => "internal",
+        TopologyClone => "clone",
+        TopologyExtend => "extend",
+        TopologyExternal => "external",
+        _ => null,
+    };
 }

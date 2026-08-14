@@ -49,7 +49,8 @@ internal static class Program
 
         if (smoke)
         {
-            log.Info($"smoke: 配置条目 {entries.Count},注册失败 {failures.Count}");
+            string? current = DisplayTopology.GetCurrentMode();
+            log.Info($"smoke: 配置条目 {entries.Count},注册失败 {failures.Count},当前拓扑 {current ?? "未知"}");
             return failures.Count == 0 ? 0 : 1;
         }
 

@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using QuickActions.Actions;
 using QuickActions.Core;
+using QuickActions.Interop;
 
 namespace QuickActions.Tests;
 
@@ -145,6 +147,18 @@ public class DisplayModeActionTests
 
 public class DisplayTopologyTests
 {
+    [Theory]
+    [InlineData(1u, "internal")]
+    [InlineData(2u, "clone")]
+    [InlineData(4u, "extend")]
+    [InlineData(8u, "external")]
+    [InlineData(0u, null)]
+    [InlineData(3u, null)]
+    public void TopologyName_MapsKnownIds(uint id, string? expected)
+    {
+        Assert.Equal(expected, DisplayTopology.TopologyName(id));
+    }
+
     [Fact]
     public void GetCurrentMode_ReturnsKnownModeOrNull()
     {
@@ -154,6 +168,18 @@ public class DisplayTopologyTests
         Assert.True(mode is null
             or "internal" or "clone" or "extend" or "external",
             $"实际值: {mode ?? "<null>"}");
+    }
+}
+
+public class DisplayConfigLayoutTests
+{
+    // CCD 结构体布局必须与原生定义一致,否则系统写入会越界(曾导致 testhost 崩溃)
+    [Theory]
+    [InlineData(typeof(DisplayConfigPathInfo), 64)]
+    [InlineData(typeof(DisplayConfigModeInfo), 64)]
+    public void StructSizes_MatchNativeLayout(Type type, int expectedSize)
+    {
+        Assert.Equal(expectedSize, Marshal.SizeOf(type));
     }
 }
 

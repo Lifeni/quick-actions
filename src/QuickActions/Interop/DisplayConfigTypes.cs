@@ -4,14 +4,18 @@ namespace QuickActions.Interop;
 
 // DISPLAYCONFIG_PATH_INFO / MODE_INFO:仅作为 QueryDisplayConfig 的缓冲区类型,
 // 拓扑判定直接使用系统返回的 DISPLAYCONFIG_TOPOLOGY_ID,不读取路径字段。
+// 各段字节数为 wingdi.h 权威定义(见注释),必须与原生布局完全一致,否则系统写入越界。
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct DisplayConfigPathInfo
 {
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)] // DISPLAYCONFIG_PATH_SOURCE_INFO
+    // DISPLAYCONFIG_PATH_SOURCE_INFO: adapterId(8) + id(4) + modeInfoIdx(4) + statusFlags(4) = 20
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
     public byte[] SourceInfo;
 
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 44)] // DISPLAYCONFIG_PATH_TARGET_INFO
+    // DISPLAYCONFIG_PATH_TARGET_INFO: adapterId(8) + id(4) + modeInfoIdx(4) + outputTechnology(4)
+    //   + rotation(4) + scaling(4) + refreshRate(8) + scanLineOrdering(4) + targetAvailable(4) + statusFlags(4) = 48
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 48)]
     public byte[] TargetInfo;
 
     public uint Flags;
@@ -25,10 +29,8 @@ internal struct DisplayConfigModeInfo
     public uint AdapterIdLow;
     public uint AdapterIdHigh;
 
-    // DISPLAYCONFIG_TARGET_MODE / SOURCE_MODE 联合,占位 44 字节(两结构最大者)
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 44)]
+    // 联合: DISPLAYCONFIG_TARGET_MODE(48,含 VIDEO_SIGNAL_INFO 的 8+8+8+8+8+4+4)
+    //   vs DISPLAYCONFIG_SOURCE_MODE(20),取较大者 48
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 48)]
     public byte[] ModeInfo;
-
-    // 原生结构含 UINT64,对齐 8,总大小 64(联合 44 后补 4 字节 padding)
-    public uint Padding;
 }

@@ -173,9 +173,9 @@ public class DisplayTopologyTests
 
 public class DisplayConfigLayoutTests
 {
-    // CCD 结构体布局必须与原生定义一致,否则系统写入会越界(曾导致 testhost 崩溃)
+    // CCD 结构体布局必须与原生定义一致,否则系统写入会越界(曾导致 testhost 偶发崩溃)
     [Theory]
-    [InlineData(typeof(DisplayConfigPathInfo), 64)]
+    [InlineData(typeof(DisplayConfigPathInfo), 72)]
     [InlineData(typeof(DisplayConfigModeInfo), 64)]
     public void StructSizes_MatchNativeLayout(Type type, int expectedSize)
     {

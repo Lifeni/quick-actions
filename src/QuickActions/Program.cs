@@ -9,8 +9,9 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
+        // 由 ApplicationHighDpiMode(PerMonitorV2)等 csproj 属性生成:
+        // SetHighDpiMode + EnableVisualStyles + SetCompatibleTextRenderingDefault(false)
+        ApplicationConfiguration.Initialize();
 
         string baseDir = AppContext.BaseDirectory;
         using var log = Logger.Open(Path.Combine(baseDir, "data"));

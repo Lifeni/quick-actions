@@ -1,5 +1,5 @@
-// .NET Framework 4.8 兼容补丁:补齐 C# 现代语法所需的运行时特性类型。
-// net5+ 已内置这些类型;net481 需要手写,仅编译期使用,无运行时语义。
+// .NET Framework 4.8 兼容补丁：补齐 C# 现代语法所需的运行时特性类型。
+// net5+ 已内置这些类型；net481 需要手写，仅编译期使用，无运行时语义。
 
 namespace System.Runtime.CompilerServices
 {
@@ -20,7 +20,7 @@ namespace System.Runtime.CompilerServices
     {
     }
 
-    /// <summary>编译器特性所需标记(required 等新语法引用)。</summary>
+    /// <summary>编译器特性所需标记（required 等新语法引用）。</summary>
     [AttributeUsage(AttributeTargets.All, AllowMultiple = true, Inherited = false)]
     internal sealed class CompilerFeatureRequiredAttribute : Attribute
     {

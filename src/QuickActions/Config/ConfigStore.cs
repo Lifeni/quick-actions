@@ -1,6 +1,6 @@
 namespace QuickActions.Config;
 
-/// <summary>配置条目:热键 → 动作 + 参数。</summary>
+/// <summary>配置条目：热键 → 动作 + 参数。</summary>
 public sealed class ConfigEntry
 {
     public required string Hotkey { get; init; }
@@ -9,8 +9,8 @@ public sealed class ConfigEntry
 }
 
 /// <summary>
-/// 配置读写。运行时文件在 exe 旁 config/config.json;首次启动自举写入默认配置。
-/// 使用内置 MiniJson 解析(仅对象/数组/字符串),零外部依赖,发布产物为单个 exe。
+/// 配置读写。运行时文件在 exe 旁 config/config.json；首次启动自举写入默认配置。
+/// 使用内置 MiniJson 解析（仅对象/数组/字符串），零外部依赖，发布产物为单个 exe。
 /// </summary>
 public sealed class ConfigStore
 {
@@ -25,7 +25,7 @@ public sealed class ConfigStore
 
     public ConfigStore(string path) => Path = path;
 
-    /// <summary>配置文件不存在时创建默认配置。已存在则不动(保留用户修改)。</summary>
+    /// <summary>配置文件不存在时创建默认配置。已存在则不动（保留用户修改）。</summary>
     public void EnsureExists(Logger log)
     {
         if (File.Exists(Path)) return;
@@ -44,7 +44,7 @@ public sealed class ConfigStore
         }
         catch (FormatException ex)
         {
-            throw new InvalidDataException($"配置 JSON 解析失败: {ex.Message}", ex);
+            throw new InvalidDataException($"配置 JSON 解析失败：{ex.Message}", ex);
         }
 
         if (root is not JsonArray array)

@@ -5,8 +5,8 @@ using QuickActions.Interop;
 namespace QuickActions.Core;
 
 /// <summary>
-/// 全局热键注册与分发。内部持有一个隐藏 NativeWindow 接收 WM_HOTKEY,
-/// 注册的句柄随窗口销毁由系统自动注销(Dispose 时显式注销)。
+/// 全局热键注册与分发。内部持有一个隐藏 NativeWindow 接收 WM_HOTKEY，
+/// 注册的句柄随窗口销毁由系统自动注销（Dispose 时显式注销）。
 /// </summary>
 public sealed class HotkeyManager : IDisposable
 {
@@ -35,7 +35,7 @@ public sealed class HotkeyManager : IDisposable
 
     public HotkeyManager() => _window = new MessageWindow(OnHotkeyMessage);
 
-    /// <summary>注册热键;失败(如被其他程序占用)返回 false 并给出原因,不抛异常。</summary>
+    /// <summary>注册热键；失败（如被其他程序占用）返回 false 并给出原因，不抛异常。</summary>
     public bool Register(Hotkey hotkey, Action handler, out string? error)
     {
         int id = _nextId++;

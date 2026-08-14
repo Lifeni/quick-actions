@@ -1,6 +1,6 @@
 namespace QuickActions.Core;
 
-/// <summary>按名称分发动作实例,大小写不敏感。</summary>
+/// <summary>按名称分发动作实例，大小写不敏感。</summary>
 public sealed class ActionRegistry
 {
     private readonly Dictionary<string, IAction> _actions = new(StringComparer.OrdinalIgnoreCase);

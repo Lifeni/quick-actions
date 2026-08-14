@@ -74,7 +74,7 @@ public class ConfigStoreTests : IDisposable
     }
 }
 
-/// <summary>测试用空实现,避免依赖真实文件系统日志。</summary>
+/// <summary>测试用空实现，避免依赖真实文件系统日志。</summary>
 internal static class TestLog
 {
     public static Logger Null => Logger.Null;

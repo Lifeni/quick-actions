@@ -9,10 +9,9 @@ Windows 常驻后台的一键动作平台:配置驱动的全局热键 → 动作
 - 当前内置动作:切换投影模式(仅当前屏幕 / 扩展模式)
 - 后续动作(规划):切换音频输出设备、静音麦克风、一键打开常用软件等
 
-## 配置
+## 快速开始
 
 ```bash
-# 构建
 dotnet build src/QuickActions/QuickActions.csproj
 
 # 运行(开发)
@@ -59,12 +58,11 @@ dotnet publish src/QuickActions/QuickActions.csproj -c Release -o dist
 
 ```
 quick-actions/
-├── config/          # 配置模板
+├── config/          # 配置模板(运行时数据在 %APPDATA%\QuickActions)
 ├── docs/            # 设计文档
 ├── scripts/         # 开发/运维脚本
 ├── src/QuickActions/    # 主程序
-├── tests/QuickActions.Tests/  # 单元测试
-└── data/            # 运行时数据(不入库)
+└── tests/QuickActions.Tests/  # 单元测试
 ```
 
 ## 状态

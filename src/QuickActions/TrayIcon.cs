@@ -6,8 +6,8 @@ using QuickActions.Interop;
 namespace QuickActions;
 
 /// <summary>
-/// 自管系统托盘图标:隐藏消息窗口 + NOTIFYICONDATA。
-/// 相比 WinForms NotifyIcon 的优势:气泡通知可用 NIIF_USER 显示自定义图标(闪电),
+/// 自管系统托盘图标：隐藏消息窗口 + NOTIFYICONDATA。
+/// 相比 WinForms NotifyIcon 的优势：气泡通知可用 NIIF_USER 显示自定义图标（闪电），
 /// 且不受 ShowBalloonTip 只能使用系统预设图标的限制。
 /// </summary>
 public sealed class TrayIcon : IDisposable
@@ -72,14 +72,14 @@ public sealed class TrayIcon : IDisposable
             Tip = "QuickActions",
         };
         if (!NativeMethods.Shell_NotifyIcon(NIM_ADD, ref _data))
-            throw new InvalidOperationException($"Shell_NotifyIcon(NIM_ADD) 失败 (Win32 错误 {Marshal.GetLastWin32Error()})");
+            throw new InvalidOperationException($"Shell_NotifyIcon（NIM_ADD）失败（Win32 错误 {Marshal.GetLastWin32Error()}）");
 
-        // v4:右键菜单使用 WM_CONTEXTMENU 消息,且支持更大 tip 文本
+        // v4：右键菜单使用 WM_CONTEXTMENU 消息，且支持更大 tip 文本
         _data.TimeoutOrVersion = NOTIFYICON_VERSION_4;
         NativeMethods.Shell_NotifyIcon(NIM_SETVERSION, ref _data);
     }
 
-    /// <summary>弹出气泡通知,图标为应用图标(闪电)。timeoutMs 仅在 Windows 7 及更早系统生效。</summary>
+    /// <summary>弹出气泡通知，图标为应用图标（闪电）。timeoutMs 仅在 Windows 7 及更早系统生效。</summary>
     public void ShowBalloon(string title, string text, int timeoutMs = 3000)
     {
         if (_disposed)

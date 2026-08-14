@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace QuickActions.Interop;
 
-// NOTIFYICONDATA v3(与 Win32 布局一致;x64 下 cbSize 应为 1080)
+// NOTIFYICONDATA v3（与 Win32 布局一致；x64 下 cbSize 应为 1080）
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
 internal struct NotifyIconData
 {

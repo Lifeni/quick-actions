@@ -6,8 +6,8 @@ using QuickActions.Core;
 namespace QuickActions;
 
 /// <summary>
-/// 常驻宿主:系统托盘图标 + 热键分发。无主窗口。
-/// 动作执行结果以托盘气泡提示(自定义图标),失败记录日志并气泡报错;
+/// 常驻宿主：系统托盘图标 + 热键分发。无主窗口。
+/// 动作执行结果以托盘气泡提示（自定义图标），失败记录日志并气泡报错；
 /// 未发生实际变化时只记录日志、不弹通知。
 /// </summary>
 public sealed class App : IDisposable
@@ -25,8 +25,8 @@ public sealed class App : IDisposable
         _tray = new TrayIcon(LoadTrayIcon(), () => Application.Exit());
     }
 
-    /// <summary>注册全部配置条目;返回失败项列表(热键冲突、格式错误、未知动作),不中断其余注册。
-    /// 注册完成后弹一次"已在后台运行"通知,列出生效热键。</summary>
+    /// <summary>注册全部配置条目；返回失败项列表（热键冲突、格式错误、未知动作），不中断其余注册。
+    /// 注册完成后弹一次"已在后台运行"通知，列出生效热键。</summary>
     public IReadOnlyList<string> RegisterAll(IEnumerable<ConfigEntry> entries)
     {
         var failures = new List<string>();
@@ -36,20 +36,20 @@ public sealed class App : IDisposable
         {
             if (!HotkeyParser.TryParse(entry.Hotkey, out var hotkey, out var parseError))
             {
-                failures.Add($"'{entry.Hotkey}': {parseError}");
+                failures.Add($"“{entry.Hotkey}”：{parseError}");
                 continue;
             }
 
             var action = _registry.Find(entry.Action);
             if (action is null)
             {
-                failures.Add($"'{entry.Hotkey}': 未知动作 '{entry.Action}'");
+                failures.Add($"“{entry.Hotkey}”：未知动作“{entry.Action}”");
                 continue;
             }
 
             if (!_hotkeys.Register(hotkey, () => Execute(action, entry.Args), out var registerError))
             {
-                failures.Add($"'{entry.Hotkey}': {registerError}");
+                failures.Add($"“{entry.Hotkey}”：{registerError}");
                 continue;
             }
 
@@ -58,7 +58,7 @@ public sealed class App : IDisposable
         }
 
         if (registered.Count > 0)
-            _tray.ShowBalloon("QuickActions", $"已在后台运行\n热键: {string.Join("、", registered)}");
+            _tray.ShowBalloon("QuickActions", $"已在后台运行\n热键：{string.Join("、", registered)}");
 
         return failures;
     }
@@ -75,7 +75,7 @@ public sealed class App : IDisposable
             }
             else
             {
-                _log.Info($"[{action.Name}] {result.Message}(未变化,不提示)");
+                _log.Info($"[{action.Name}] {result.Message}（未变化，不提示）");
             }
         }
         catch (Exception ex)
@@ -85,7 +85,7 @@ public sealed class App : IDisposable
         }
     }
 
-    /// <summary>加载嵌入资源中的图标;失败时回退系统默认图标。</summary>
+    /// <summary>加载嵌入资源中的图标；失败时回退系统默认图标。</summary>
     private static Icon LoadTrayIcon()
     {
         try

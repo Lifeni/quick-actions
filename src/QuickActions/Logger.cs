@@ -1,6 +1,6 @@
 namespace QuickActions;
 
-/// <summary>Append-only 日志,写入 exe 旁 data/log.txt。无 UI 常驻程序的可观测性来源。</summary>
+/// <summary>Append-only 日志，写入 exe 旁 data/log.txt。无 UI 常驻程序的可观测性来源。</summary>
 public sealed class Logger : IDisposable
 {
     private readonly StreamWriter _writer;
@@ -13,7 +13,7 @@ public sealed class Logger : IDisposable
         return new Logger(writer);
     }
 
-    /// <summary>丢弃输出的日志,供测试使用。</summary>
+    /// <summary>丢弃输出的日志，供测试使用。</summary>
     public static Logger Null => new(StreamWriter.Null);
 
     private Logger(StreamWriter writer) => _writer = writer;

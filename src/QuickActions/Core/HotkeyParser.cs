@@ -4,7 +4,7 @@ namespace QuickActions.Core;
 
 /// <summary>
 /// 把配置里的热键字符串解析为 <see cref="Hotkey"/>。
-/// 支持:F1–F24、字母、数字;修饰键 Ctrl/Alt/Shift/Win(大小写不敏感),如 "Ctrl+Shift+F14"、"F13"。
+/// 支持：F1–F24、字母、数字；修饰键 Ctrl/Alt/Shift/Win（大小写不敏感），如 "Ctrl+Shift+F14"、"F13"。
 /// </summary>
 public static class HotkeyParser
 {
@@ -29,11 +29,11 @@ public static class HotkeyParser
 
         if (text.StartsWith("+") || text.EndsWith("+") || text.Contains("++"))
         {
-            error = "格式错误:应为 \"[修饰键+]键\",如 \"Ctrl+Shift+F14\"";
+            error = "格式错误：应为“[修饰键+]键”，如“Ctrl+Shift+F14”";
             return false;
         }
 
-        // net481 无 StringSplitOptions.TrimEntries:先按 '+' 拆分再去空白
+        // net481 无 StringSplitOptions.TrimEntries：先按 '+' 拆分再去空白
         string[] parts = text.Split('+')
             .Select(p => p.Trim())
             .Where(p => p.Length > 0)
@@ -60,18 +60,18 @@ public static class HotkeyParser
             }
             if (!found)
             {
-                error = $"未知修饰键 '{parts[i]}'";
+                error = $"未知修饰键“{parts[i]}”";
                 return false;
             }
         }
 
         if (!TryParseKey(parts[parts.Length - 1], out uint vk))
         {
-            error = $"不支持的键 '{parts[parts.Length - 1]}'(支持 F1–F24、字母、数字)";
+            error = $"不支持的键“{parts[parts.Length - 1]}”（支持 F1–F24、字母、数字）";
             return false;
         }
 
-        // MOD_NOREPEAT:按住不重复触发,适合"切换类"动作。
+        // MOD_NOREPEAT：按住不重复触发，适合"切换类"动作。
         hotkey = new Hotkey(modifiers | NativeMethods.MOD_NOREPEAT, vk);
         return true;
     }
@@ -88,7 +88,7 @@ public static class HotkeyParser
         if (text.Length >= 2 && (text[0] == 'F' || text[0] == 'f')
             && int.TryParse(text.Substring(1), out int fn) && fn is >= 1 and <= 24)
         {
-            // F1–F12: 0x70–0x7B;F13–F24: 0x7C–0x87(可编程键盘专用键,不与系统冲突)
+            // F1–F12： 0x70–0x7B；F13–F24： 0x7C–0x87（可编程键盘专用键，不与系统冲突）
             vk = fn <= 12 ? (uint)(0x70 + fn - 1) : (uint)(0x7C + fn - 13);
             return true;
         }

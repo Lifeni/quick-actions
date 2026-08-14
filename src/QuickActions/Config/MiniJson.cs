@@ -2,7 +2,7 @@ using System.Text;
 
 namespace QuickActions.Config;
 
-/// <summary>极简 JSON 值类型:仅对象/数组/字符串(本项目配置所需子集)。</summary>
+/// <summary>极简 JSON 值类型：仅对象/数组/字符串（本项目配置所需子集）。</summary>
 internal abstract class JsonValue
 {
     public static JsonValue Parse(string text)
@@ -40,7 +40,7 @@ internal sealed class JsonString : JsonValue
     public JsonString(string value) => Value = value;
 }
 
-/// <summary>递归下降 JSON 解析器(对象/数组/字符串子集)。</summary>
+/// <summary>递归下降 JSON 解析器（对象/数组/字符串子集）。</summary>
 internal static class MiniJson
 {
     public static JsonValue Parse(string text) => JsonValue.Parse(text);

@@ -61,7 +61,7 @@ public class DisplayModeActionTests
     [Fact]
     public void ParseArgs_JsonWithoutMode_Throws()
     {
-        // MiniJson 仅支持对象/数组/字符串,这里用字符串值构造"缺 mode"的对象
+        // MiniJson 仅支持对象/数组/字符串，这里用字符串值构造"缺 mode"的对象
         var json = MiniJson.Parse("""{ "other": "x" }""");
 
         Assert.Throws<ArgumentException>(() => DisplayModeAction.ParseArgs(json));
@@ -163,7 +163,7 @@ public class DisplayTopologyTests
     [Fact]
     public void GetCurrentMode_ReturnsKnownModeOrNull()
     {
-        // 只读查询,不修改显示状态;任何机器上都应返回合法拓扑名或 null(查询失败)
+        // 只读查询，不修改显示状态；任何机器上都应返回合法拓扑名或 null（查询失败）
         string? mode = DisplayTopology.GetCurrentMode();
 
         Assert.True(mode is null
@@ -174,7 +174,7 @@ public class DisplayTopologyTests
 
 public class DisplayConfigLayoutTests
 {
-    // CCD 结构体布局必须与原生定义一致,否则系统写入会越界(曾导致 testhost 偶发崩溃)
+    // CCD 结构体布局必须与原生定义一致，否则系统写入会越界（曾导致 testhost 偶发崩溃）
     [Theory]
     [InlineData(typeof(DisplayConfigPathInfo), 72)]
     [InlineData(typeof(DisplayConfigModeInfo), 64)]

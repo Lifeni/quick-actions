@@ -2,6 +2,34 @@ using System.Runtime.InteropServices;
 
 namespace QuickActions.Interop;
 
+// NOTIFYICONDATA v3(与 Win32 布局一致;x64 下 cbSize 应为 1080)
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+internal struct NotifyIconData
+{
+    public uint CbSize;
+    public IntPtr Hwnd;
+    public uint Id;
+    public uint Flags;
+    public uint CallbackMessage;
+    public IntPtr Icon;
+
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+    public string Tip;
+
+    public uint State;
+    public uint StateMask;
+
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+    public string Info;
+
+    public uint TimeoutOrVersion;
+
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
+    public string InfoTitle;
+
+    public uint InfoFlags;
+}
+
 internal static class NativeMethods
 {
     public const int WM_HOTKEY = 0x0312;
@@ -58,4 +86,8 @@ internal static class NativeMethods
         ref uint numModeInfoArrayElements,
         [In, Out] DisplayConfigModeInfo[]? modeInfoArray,
         out uint currentTopologyId);
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool Shell_NotifyIcon(uint dwMessage, ref NotifyIconData lpdata);
 }

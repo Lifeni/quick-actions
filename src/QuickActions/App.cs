@@ -5,11 +5,12 @@ namespace QuickActions;
 
 /// <summary>
 /// 常驻宿主:系统托盘图标 + 热键分发。无主窗口。
-/// 动作执行结果以托盘气泡提示,失败记录日志并气泡报错。
+/// 动作执行结果以托盘气泡提示(自定义图标),失败记录日志并气泡报错;
+/// 未发生实际变化时只记录日志、不弹通知。
 /// </summary>
 public sealed class App : IDisposable
 {
-    private readonly NotifyIcon _tray;
+    private readonly TrayIcon _tray;
     private readonly HotkeyManager _hotkeys = new();
     private readonly ActionRegistry _registry;
     private readonly Logger _log;
@@ -19,20 +20,7 @@ public sealed class App : IDisposable
         _registry = registry;
         _log = log;
 
-        _tray = new NotifyIcon
-        {
-            Icon = LoadTrayIcon(),
-            Text = "QuickActions",
-            Visible = true,
-        };
-
-        var menu = new ContextMenuStrip();
-        menu.Items.Add("退出", null, (_, _) =>
-        {
-            _tray.Visible = false;
-            Application.Exit();
-        });
-        _tray.ContextMenuStrip = menu;
+        _tray = new TrayIcon(LoadTrayIcon(), () => Application.Exit());
     }
 
     /// <summary>注册全部配置条目;返回失败项列表(热键冲突、格式错误、未知动作),不中断其余注册。</summary>
@@ -75,7 +63,7 @@ public sealed class App : IDisposable
             if (result.Changed)
             {
                 _log.Info($"[{action.Name}] {result.Message}");
-                _tray.ShowBalloonTip(2000, "QuickActions", result.Message, ToolTipIcon.Info);
+                _tray.ShowBalloon("QuickActions", result.Message);
             }
             else
             {
@@ -85,7 +73,7 @@ public sealed class App : IDisposable
         catch (Exception ex)
         {
             _log.Error($"[{action.Name}] 执行失败: {ex}");
-            _tray.ShowBalloonTip(3000, "QuickActions", $"动作失败: {ex.Message}", ToolTipIcon.Error);
+            _tray.ShowBalloon("QuickActions", $"动作失败: {ex.Message}");
         }
     }
 

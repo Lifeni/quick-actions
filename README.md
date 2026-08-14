@@ -24,8 +24,11 @@ dotnet build src/QuickActions/QuickActions.csproj
 # 运行(开发)
 dotnet run --project src/QuickActions
 
-# 发布单文件
-dotnet publish src/QuickActions/QuickActions.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true
+# 发布单文件(framework-dependent,约 250KB,需要机器已装 .NET 9 Desktop Runtime)
+dotnet publish src/QuickActions/QuickActions.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o dist
+
+# 可选:自带 runtime 的独立单文件(约 110MB,免安装 runtime)
+dotnet publish src/QuickActions/QuickActions.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o dist
 ```
 
 ## 配置

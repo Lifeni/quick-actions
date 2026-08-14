@@ -32,7 +32,12 @@ dotnet publish src/QuickActions/QuickActions.csproj -c Release -o dist
 
 ## 配置
 
-运行时读取 exe 旁 `config/config.json`(首次启动从模板复制)。热键支持:
+运行时数据位于 `%APPDATA%\QuickActions\`(exe 目录保持干净):
+
+- `config.json` — 热键配置,首次启动自举默认值
+- `log.txt` — 运行日志
+
+启动后弹一次"已在后台运行"通知,列出生效热键。热键支持:
 
 - 单键:`F13`~`F24`、`F1`~`F12`、字母/数字键
 - 组合键:`Ctrl+Shift+F14`、`Alt+F13`(修饰键: `Ctrl` / `Alt` / `Shift` / `Win`)

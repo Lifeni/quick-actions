@@ -14,14 +14,16 @@ internal static class Program
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 
-        string baseDir = AppContext.BaseDirectory;
-        using var log = Logger.Open(Path.Combine(baseDir, "data"));
+        // 数据目录:%APPDATA%\QuickActions(配置 + 日志),exe 目录保持干净
+        string dataRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickActions");
+        using var log = Logger.Open(dataRoot);
         log.Info("QuickActions 启动");
 
         bool smoke = args.Contains("--smoke", StringComparer.OrdinalIgnoreCase);
 
         // 1. 确保配置存在(首次运行自举默认配置)
-        var configStore = new ConfigStore(Path.Combine(baseDir, "config", "config.json"));
+        var configStore = new ConfigStore(Path.Combine(dataRoot, "config.json"));
         configStore.EnsureExists(log);
 
         // 2. 加载配置;失败时弹框提示,必须人工修复

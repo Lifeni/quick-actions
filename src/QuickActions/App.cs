@@ -25,10 +25,12 @@ public sealed class App : IDisposable
         _tray = new TrayIcon(LoadTrayIcon(), () => Application.Exit());
     }
 
-    /// <summary>注册全部配置条目;返回失败项列表(热键冲突、格式错误、未知动作),不中断其余注册。</summary>
+    /// <summary>注册全部配置条目;返回失败项列表(热键冲突、格式错误、未知动作),不中断其余注册。
+    /// 注册完成后弹一次"已在后台运行"通知,列出生效热键。</summary>
     public IReadOnlyList<string> RegisterAll(IEnumerable<ConfigEntry> entries)
     {
         var failures = new List<string>();
+        var registered = new List<string>();
 
         foreach (var entry in entries)
         {
@@ -51,8 +53,12 @@ public sealed class App : IDisposable
                 continue;
             }
 
+            registered.Add(entry.Hotkey);
             _log.Info($"热键 {entry.Hotkey} → {entry.Action} 已注册");
         }
+
+        if (registered.Count > 0)
+            _tray.ShowBalloon("QuickActions", $"已在后台运行\n热键: {string.Join("、", registered)}");
 
         return failures;
     }

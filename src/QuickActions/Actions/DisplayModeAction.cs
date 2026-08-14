@@ -1,4 +1,4 @@
-using System.Text.Json;
+using QuickActions.Config;
 using QuickActions.Core;
 using QuickActions.Interop;
 
@@ -47,28 +47,28 @@ public sealed class DisplayModeAction : IAction
 
     internal static (string Mode, string[] Modes) ParseArgs(object? args)
     {
-        if (args is JsonElement element && element.ValueKind == JsonValueKind.Object)
+        if (args is JsonObject obj)
         {
-            string? mode = element.TryGetProperty("mode", out var modeProp)
-                && modeProp.ValueKind == JsonValueKind.String
-                ? modeProp.GetString()!.Trim().ToLowerInvariant()
+            string? mode = obj.TryGet("mode", out var modeVal) && modeVal is JsonString modeStr
+                ? modeStr.Value.Trim().ToLowerInvariant()
                 : null;
 
-            string[] modes = element.TryGetProperty("modes", out var modesProp)
-                && modesProp.ValueKind == JsonValueKind.Array
-                ? modesProp.EnumerateArray()
-                    .Where(x => x.ValueKind == JsonValueKind.String)
-                    .Select(x => x.GetString()!.Trim().ToLowerInvariant())
-                    .ToArray()
-                : Array.Empty<string>();
+            string[] modes = Array.Empty<string>();
+            if (obj.TryGet("modes", out var modesVal) && modesVal is JsonArray modesArr)
+                modes = modesArr.Items.OfType<JsonString>()
+                    .Select(x => x.Value.Trim().ToLowerInvariant())
+                    .ToArray();
 
             if (string.IsNullOrEmpty(mode))
                 throw new ArgumentException("缺少 args.mode (internal|extend|external|clone|toggle)");
             return (mode, modes);
         }
 
-        if (args is string text && !string.IsNullOrWhiteSpace(text))
-            return (text.Trim().ToLowerInvariant(), Array.Empty<string>());
+        if (args is JsonString text && !string.IsNullOrWhiteSpace(text.Value))
+            return (text.Value.Trim().ToLowerInvariant(), Array.Empty<string>());
+
+        if (args is string direct && !string.IsNullOrWhiteSpace(direct))
+            return (direct.Trim().ToLowerInvariant(), Array.Empty<string>());
 
         throw new ArgumentException("缺少 args.mode (internal|extend|external|clone|toggle)");
     }

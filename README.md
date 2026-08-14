@@ -9,13 +9,7 @@ Windows 常驻后台的一键动作平台:配置驱动的全局热键 → 动作
 - 当前内置动作:切换投影模式(仅当前屏幕 / 扩展模式)
 - 后续动作(规划):切换音频输出设备、静音麦克风、一键打开常用软件等
 
-## 技术栈
-
-- .NET 9 (Windows) / C#
-- WinForms 无窗口消息泵宿主 + 系统托盘图标
-- P/Invoke:`RegisterHotKey`(全局热键)、`SetDisplayConfig`(投影拓扑)
-
-## 快速开始
+## 配置
 
 ```bash
 # 构建
@@ -24,12 +18,17 @@ dotnet build src/QuickActions/QuickActions.csproj
 # 运行(开发)
 dotnet run --project src/QuickActions
 
-# 发布单文件(framework-dependent,约 250KB,需要机器已装 .NET 9 Desktop Runtime)
-dotnet publish src/QuickActions/QuickActions.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o dist
-
-# 可选:自带 runtime 的独立单文件(约 110MB,免安装 runtime)
-dotnet publish src/QuickActions/QuickActions.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o dist
+# 发布 Release(输出到 dist/)
+dotnet publish src/QuickActions/QuickActions.csproj -c Release -o dist
 ```
+
+## 技术栈
+
+- .NET Framework 4.8.1(Windows 11 内置,免安装 runtime,任何 Win11 直接运行)
+- WinForms 无窗口消息泵宿主 + 自管系统托盘(自定义气泡图标)
+- P/Invoke:`RegisterHotKey`(全局热键)、`SetDisplayConfig`(投影拓扑)、`QueryDisplayConfig`(当前拓扑)
+- 内置 MiniJson 解析器,零外部依赖,发布产物为单个 exe(约 76KB)
+- 高 DPI:app.manifest 声明 PerMonitorV2
 
 ## 配置
 
@@ -65,4 +64,4 @@ quick-actions/
 
 ## 状态
 
-开发中:骨架 + 投影切换动作已实现,待接可编程键盘实测热键。
+可用:投影切换(toggle + 指定模式)、自定义托盘与气泡、单 exe 发布(net481)。

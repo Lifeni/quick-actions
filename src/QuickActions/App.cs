@@ -1,3 +1,5 @@
+using System.Drawing;
+using System.Windows.Forms;
 using QuickActions.Config;
 using QuickActions.Core;
 

@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace QuickActions.Config;
 
 /// <summary>配置条目:热键 → 动作 + 参数。</summary>
@@ -11,8 +9,8 @@ public sealed class ConfigEntry
 }
 
 /// <summary>
-/// 配置读写。运行时文件在 exe 旁 config/config.json;首次启动自举写入默认配置,
-/// 因此单文件发布也能正常工作(不依赖 Content 提取)。
+/// 配置读写。运行时文件在 exe 旁 config/config.json;首次启动自举写入默认配置。
+/// 使用内置 MiniJson 解析(仅对象/数组/字符串),零外部依赖,发布产物为单个 exe。
 /// </summary>
 public sealed class ConfigStore
 {
@@ -39,8 +37,38 @@ public sealed class ConfigStore
     public List<ConfigEntry> Load()
     {
         string json = File.ReadAllText(Path);
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        return JsonSerializer.Deserialize<List<ConfigEntry>>(json, options)
-            ?? throw new InvalidDataException("配置内容为空");
+        JsonValue root;
+        try
+        {
+            root = JsonValue.Parse(json);
+        }
+        catch (FormatException ex)
+        {
+            throw new InvalidDataException($"配置 JSON 解析失败: {ex.Message}", ex);
+        }
+
+        if (root is not JsonArray array)
+            throw new InvalidDataException("配置内容应为 JSON 数组");
+
+        var entries = new List<ConfigEntry>(array.Items.Count);
+        foreach (var item in array.Items)
+        {
+            if (item is not JsonObject obj)
+                throw new InvalidDataException("配置条目应为 JSON 对象");
+
+            var hotkey = obj.TryGet("hotkey", out var hk) ? hk as JsonString : null;
+            var action = obj.TryGet("action", out var act) ? act as JsonString : null;
+            if (hotkey is null || action is null)
+                throw new InvalidDataException("配置条目缺少 hotkey/action 字符串字段");
+
+            obj.TryGet("args", out var args);
+            entries.Add(new ConfigEntry
+            {
+                Hotkey = hotkey.Value,
+                Action = action.Value,
+                Args = args,
+            });
+        }
+        return entries;
     }
 }

@@ -1,3 +1,4 @@
+using System.Windows.Forms;
 using QuickActions.Actions;
 using QuickActions.Config;
 using QuickActions.Core;
@@ -9,9 +10,9 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
-        // 由 ApplicationHighDpiMode(PerMonitorV2)等 csproj 属性生成:
-        // SetHighDpiMode + EnableVisualStyles + SetCompatibleTextRenderingDefault(false)
-        ApplicationConfiguration.Initialize();
+        // .NET Framework 4.8.1:手写初始化(PerMonitorV2 由 app.manifest 声明)
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
 
         string baseDir = AppContext.BaseDirectory;
         using var log = Logger.Open(Path.Combine(baseDir, "data"));

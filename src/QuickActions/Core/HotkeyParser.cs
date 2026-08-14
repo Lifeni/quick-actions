@@ -27,13 +27,17 @@ public static class HotkeyParser
             return false;
         }
 
-        if (text.StartsWith('+') || text.EndsWith('+') || text.Contains("++"))
+        if (text.StartsWith("+") || text.EndsWith("+") || text.Contains("++"))
         {
             error = "格式错误:应为 \"[修饰键+]键\",如 \"Ctrl+Shift+F14\"";
             return false;
         }
 
-        string[] parts = text.Split('+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        // net481 无 StringSplitOptions.TrimEntries:先按 '+' 拆分再去空白
+        string[] parts = text.Split('+')
+            .Select(p => p.Trim())
+            .Where(p => p.Length > 0)
+            .ToArray();
         if (parts.Length == 0)
         {
             error = "热键为空";
@@ -61,9 +65,9 @@ public static class HotkeyParser
             }
         }
 
-        if (!TryParseKey(parts[^1], out uint vk))
+        if (!TryParseKey(parts[parts.Length - 1], out uint vk))
         {
-            error = $"不支持的键 '{parts[^1]}'(支持 F1–F24、字母、数字)";
+            error = $"不支持的键 '{parts[parts.Length - 1]}'(支持 F1–F24、字母、数字)";
             return false;
         }
 
@@ -82,7 +86,7 @@ public static class HotkeyParser
         vk = 0;
 
         if (text.Length >= 2 && (text[0] == 'F' || text[0] == 'f')
-            && int.TryParse(text.AsSpan(1), out int fn) && fn is >= 1 and <= 24)
+            && int.TryParse(text.Substring(1), out int fn) && fn is >= 1 and <= 24)
         {
             // F1–F12: 0x70–0x7B;F13–F24: 0x7C–0x87(可编程键盘专用键,不与系统冲突)
             vk = fn <= 12 ? (uint)(0x70 + fn - 1) : (uint)(0x7C + fn - 13);

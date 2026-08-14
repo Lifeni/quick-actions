@@ -1,4 +1,6 @@
+using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using QuickActions.Interop;
 
 namespace QuickActions;

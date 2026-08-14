@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using QuickActions.Actions;
+using QuickActions.Config;
 using QuickActions.Core;
 using QuickActions.Interop;
 
@@ -33,7 +33,7 @@ public class DisplayModeActionTests
     [Fact]
     public void ParseArgs_JsonObjectArg_ReadsModeProperty()
     {
-        var json = JsonDocument.Parse("""{ "mode": "extend" }""").RootElement;
+        var json = MiniJson.Parse("""{ "mode": "extend" }""");
 
         Assert.Equal(("extend", Array.Empty<string>()), DisplayModeAction.ParseArgs(json));
     }
@@ -41,7 +41,7 @@ public class DisplayModeActionTests
     [Fact]
     public void ParseArgs_JsonWithToggleModes_ReadsBoth()
     {
-        var json = JsonDocument.Parse("""{ "mode": "toggle", "modes": ["internal", "extend"] }""").RootElement;
+        var json = MiniJson.Parse("""{ "mode": "toggle", "modes": ["internal", "extend"] }""");
 
         var (mode, modes) = DisplayModeAction.ParseArgs(json);
 
@@ -61,7 +61,8 @@ public class DisplayModeActionTests
     [Fact]
     public void ParseArgs_JsonWithoutMode_Throws()
     {
-        var json = JsonDocument.Parse("""{ "other": 1 }""").RootElement;
+        // MiniJson 仅支持对象/数组/字符串,这里用字符串值构造"缺 mode"的对象
+        var json = MiniJson.Parse("""{ "other": "x" }""");
 
         Assert.Throws<ArgumentException>(() => DisplayModeAction.ParseArgs(json));
     }

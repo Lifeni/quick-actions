@@ -28,6 +28,7 @@ public sealed class TrayIcon : IDisposable
     private const int WM_NOTIFYICON = 0x0400 + 1;
     private const int WM_CONTEXTMENU = 0x007B;
     private const int WM_RBUTTONUP = 0x0205;
+    private const int WM_LBUTTONUP = 0x0202;
 
     private sealed class TrayWindow : NativeWindow
     {
@@ -53,13 +54,12 @@ public sealed class TrayIcon : IDisposable
     private NotifyIconData _data;
     private bool _disposed;
 
-    public TrayIcon(Icon icon, Action onExit)
+    /// <summary>菜单由调用方构建(动作项由 App 决定),TrayIcon 负责弹出。</summary>
+    public TrayIcon(Icon icon, ContextMenuStrip menu)
     {
         _icon = icon;
+        _menu = menu;
         _window = new TrayWindow(OnTrayMessage);
-
-        _menu = new ContextMenuStrip();
-        _menu.Items.Add("退出", null, (_, _) => onExit());
 
         _data = new NotifyIconData
         {
@@ -98,7 +98,8 @@ public sealed class TrayIcon : IDisposable
     private void OnTrayMessage(Message m)
     {
         int msg = m.LParam.ToInt32();
-        if (msg == WM_CONTEXTMENU || msg == WM_RBUTTONUP)
+        // 左键/右键单击、右键菜单消息都弹出同一菜单(左键单击 = 快捷唤出)
+        if (msg == WM_CONTEXTMENU || msg == WM_RBUTTONUP || msg == WM_LBUTTONUP)
             _menu.Show(Cursor.Position);
     }
 

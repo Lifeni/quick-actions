@@ -16,13 +16,23 @@ public sealed class App : IDisposable
     private readonly HotkeyManager _hotkeys = new();
     private readonly ActionRegistry _registry;
     private readonly Logger _log;
+    private object? _toggleArgs;
+
+    /// <summary>菜单/默认切换参数:与配置默认一致的 internal ↔ extend 循环。</summary>
+    private static readonly object DefaultToggleArgs =
+        MiniJson.Parse("""{ "mode": "toggle", "modes": ["internal", "extend"] }""");
 
     public App(ActionRegistry registry, Logger log)
     {
         _registry = registry;
         _log = log;
 
-        _tray = new TrayIcon(LoadTrayIcon(), () => Application.Exit());
+        var menu = new ContextMenuStrip();
+        menu.Items.Add("切换投影显示模式", null, (_, _) =>
+            Execute(_registry.Find("display_mode")!, _toggleArgs ?? DefaultToggleArgs));
+        menu.Items.Add("退出", null, (_, _) => Application.Exit());
+
+        _tray = new TrayIcon(LoadTrayIcon(), menu);
     }
 
     /// <summary>注册全部配置条目；返回失败项列表（热键冲突、格式错误、未知动作），不中断其余注册。
@@ -34,6 +44,10 @@ public sealed class App : IDisposable
 
         foreach (var entry in entries)
         {
+            // 记录第一条 display_mode 条目的参数,托盘菜单"切换投影显示模式"与热键行为保持一致
+            if (entry.Action == "display_mode" && _toggleArgs is null)
+                _toggleArgs = entry.Args;
+
             if (!HotkeyParser.TryParse(entry.Hotkey, out var hotkey, out var parseError))
             {
                 failures.Add($"“{entry.Hotkey}”：{parseError}");

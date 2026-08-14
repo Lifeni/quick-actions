@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>QuickActions</AssemblyName>
+    <RootNamespace>QuickActions</RootNamespace>
+    <ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="QuickActions.Tests" />
+  </ItemGroup>
+
+</Project>

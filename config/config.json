@@ -1,0 +1,4 @@
+[
+  { "hotkey": "F13", "action": "display_mode", "args": { "mode": "internal" } },
+  { "hotkey": "F14", "action": "display_mode", "args": { "mode": "extend" } }
+]

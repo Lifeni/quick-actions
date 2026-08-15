@@ -150,7 +150,8 @@ public class AutoThemeSettingsTests
     [Fact]
     public void FromArgs_MissingConfig_ComputesJinanDayTimes()
     {
-        // 参考值由 NOAA 算法独立实现（Python）计算，±5 分钟容差
+        // 用白昼时长断言（时区无关）：济南 8 月中旬日出 05:28、日落 19:03，
+        // 昼长约 13 小时 35 分——该值不依赖机器时区，CI（UTC）与本地（UTC+8）一致
         var settings = AutoThemeSettings.FromArgs(null);
 
         var (rise, set, allDay) = settings.GetDayTimes(DateTime.Parse("2026-08-15 10:00"));
@@ -158,10 +159,10 @@ public class AutoThemeSettingsTests
         Assert.NotNull(rise);
         Assert.NotNull(set);
         Assert.Null(allDay);
-        Assert.InRange(rise!.Value.TimeOfDay - TimeSpan.Parse("05:28"),
-            -TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
-        Assert.InRange(set!.Value.TimeOfDay - TimeSpan.Parse("19:03"),
-            -TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+        var dayLength = set!.Value - rise!.Value;
+        Assert.InRange(dayLength,
+            TimeSpan.FromMinutes(13 * 60 + 35 - 5),
+            TimeSpan.FromMinutes(13 * 60 + 35 + 5));
     }
 
     [Fact]

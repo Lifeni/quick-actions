@@ -159,7 +159,11 @@ public class AutoThemeSettingsTests
         Assert.NotNull(rise);
         Assert.NotNull(set);
         Assert.Null(allDay);
-        var dayLength = set!.Value - rise!.Value;
+        // 事件跨午夜回绕（机器时区偏离目标地时区时，如 CI 的 UTC 对 UTC+8 的济南）：
+        // 日落可能落在"同一天"的日出之前，白昼时长需补一天再算——真实时长与时区无关
+        var dayLength = set >= rise
+            ? set.Value - rise.Value
+            : set.Value.AddDays(1) - rise.Value;
         Assert.InRange(dayLength,
             TimeSpan.FromMinutes(13 * 60 + 35 - 5),
             TimeSpan.FromMinutes(13 * 60 + 35 + 5));

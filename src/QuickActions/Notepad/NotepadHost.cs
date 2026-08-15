@@ -24,9 +24,10 @@ public sealed class NotepadHost : IDisposable
 
         if (_window.Visible)
         {
+            // 快捷键关闭：先把文本复制到剪贴板，再直接关闭窗口
             _window.CopyToClipboard();
-            _window.HideWindow();
-            return new ActionResult(true, "已复制内容并隐藏记事本", Notify: false);
+            _window.Close();
+            return new ActionResult(true, "已复制内容并关闭记事本", Notify: false);
         }
 
         _window.ShowWindow();

@@ -344,20 +344,7 @@ public sealed class App : IDisposable
     }
 
     /// <summary>加载嵌入资源中的图标；失败时回退系统默认图标。</summary>
-    private static Icon LoadTrayIcon()
-    {
-        try
-        {
-            using var stream = typeof(App).Assembly.GetManifestResourceStream("QuickActions.Assets.quick-actions.ico");
-            if (stream is not null)
-                return new Icon(stream);
-        }
-        catch
-        {
-            // 回退到系统图标
-        }
-        return SystemIcons.Application;
-    }
+    private static Icon LoadTrayIcon() => IconLoader.Load();
 
     public void Dispose()
     {

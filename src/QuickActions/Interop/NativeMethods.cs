@@ -142,6 +142,13 @@ internal static class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool GetCursorPos(out System.Drawing.Point point);
 
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool ReleaseCapture();
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
     // ---- 菜单 DPI：按目标显示器固定采样（避免跨显示器测量/绘制缩放不一致导致文本换行） ----
 
     public const uint MONITOR_DEFAULTTONEAREST = 2;

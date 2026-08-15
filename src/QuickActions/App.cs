@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using QuickActions.Actions;
 using QuickActions.Config;
 using QuickActions.Core;
+using QuickActions.Notepad;
 
 namespace QuickActions;
 
@@ -20,12 +21,15 @@ public sealed class App : IDisposable
     private readonly Logger _log;
     private readonly string _configPath;
     private readonly SingleInstance _singleInstance;
+    private readonly NotepadHost _notepad;
     private object? _toggleArgs;
     private object? _themeArgs;
     private readonly ModernMenuItem _displayItem;
     private readonly ModernMenuItem _themeItem;
+    private readonly ModernMenuItem _notepadItem;
     private string? _displayHotkey;
     private string? _themeHotkey;
+    private string? _notepadHotkey;
 
     /// <summary>菜单/默认切换参数:与配置默认一致的 internal ↔ extend 循环。</summary>
     private static readonly object DefaultToggleArgs =
@@ -35,15 +39,23 @@ public sealed class App : IDisposable
     private static readonly object DefaultThemeArgs =
         MiniJson.Parse("""{ "mode": "toggle" }""");
 
-    public App(ActionRegistry registry, Logger log, AutoThemeScheduler autoTheme, string configPath, SingleInstance singleInstance)
+    public App(ActionRegistry registry, Logger log, AutoThemeScheduler autoTheme, string configPath, SingleInstance singleInstance, NotepadHost notepad)
     {
         _registry = registry;
         _log = log;
         _autoTheme = autoTheme;
         _configPath = configPath;
         _singleInstance = singleInstance;
+        _notepad = notepad;
 
         var menu = new ModernMenu();
+        _notepadItem = new ModernMenuItem
+        {
+            Text = "快捷记事",
+            IconGlyph = "\uE70F", // Edit
+            OnClick = () => _notepad.Show(),
+        };
+        menu.Add(_notepadItem);
         _displayItem = new ModernMenuItem
         {
             Text = "切换投影",
@@ -89,6 +101,12 @@ public sealed class App : IDisposable
         });
         menu.Add(new ModernMenuItem
         {
+            Text = "恢复配置",
+            IconGlyph = "\uE777", // Restore
+            OnClick = RestoreConfig,
+        });
+        menu.Add(new ModernMenuItem
+        {
             Text = $"版本 v{GetVersion()}",
             IconGlyph = "\uE774", // Globe
             OnClick = OpenGitHubPage,
@@ -108,6 +126,7 @@ public sealed class App : IDisposable
     {
         "display_mode" => "切换投影",
         "theme" => "切换亮暗",
+        "notepad" => "快捷记事",
         _ => action,
     };
 
@@ -162,6 +181,42 @@ public sealed class App : IDisposable
             _log.Error($"打开 GitHub 页面失败: {ex}");
             _tray.ShowBalloon("QuickActions", $"打开 GitHub 页面失败：{ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// 恢复默认配置：删除运行时配置、记事本内容与注册表设置（自动亮暗标志、记事本位置、开机自启），
+    /// 重新生成默认配置并重启应用。确认对话框防误触。
+    /// </summary>
+    private void RestoreConfig()
+    {
+        var confirm = MessageBox.Show(
+            "将删除运行时配置、注册表设置与记事本内容，并恢复默认配置（应用会重启）。是否继续？",
+            "QuickActions", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+        if (confirm != DialogResult.OK)
+            return;
+
+        try
+        {
+            // 先关闭记事本（其关闭时会把内容写回 notepad.txt），再删除生成文件
+            _notepad.Dispose();
+            string dataDir = Path.GetDirectoryName(_configPath)!;
+            foreach (string file in new[] { _configPath, Path.Combine(dataDir, "notepad.txt") })
+            {
+                if (File.Exists(file))
+                    File.Delete(file);
+            }
+            Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(@"Software\QuickActions", throwOnMissingSubKey: false);
+            AutoStart.Disable();
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"恢复配置失败: {ex}");
+            _tray.ShowBalloon("QuickActions", $"恢复配置失败：{ex.Message}");
+            return;
+        }
+
+        new ConfigStore(_configPath).EnsureExists(_log);
+        RestartApp();
     }
 
     /// <summary>
@@ -221,12 +276,19 @@ public sealed class App : IDisposable
                 _displayItem.Shortcut = _displayHotkey;
             }
 
-            // 记录第一条 theme 条目的参数与热键,托盘菜单"切换亮色/暗色模式"与热键行为保持一致
+            // 记录第一条 theme 条目的参数与热键,托盘菜单"切换亮暗"与热键行为保持一致
             if (entry.Action == "theme" && _themeArgs is null)
             {
                 _themeArgs = entry.Args;
                 _themeHotkey = entry.Hotkey;
                 _themeItem.Shortcut = _themeHotkey;
+            }
+
+            // 记录第一条 notepad 条目的热键,托盘菜单"快捷记事"显示快捷键提示
+            if (entry.Action == "notepad" && _notepadHotkey is null)
+            {
+                _notepadHotkey = entry.Hotkey;
+                _notepadItem.Shortcut = _notepadHotkey;
             }
 
             if (!HotkeyParser.TryParse(entry.Hotkey, out var hotkey, out var parseError))

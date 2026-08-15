@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using QuickActions.Actions;
 using QuickActions.Config;
 using QuickActions.Core;
+using QuickActions.Notepad;
 namespace QuickActions;
 
 internal static class Program
@@ -50,6 +51,8 @@ internal static class Program
         var registry = new ActionRegistry();
         registry.Register(new DisplayModeAction());
         registry.Register(new ThemeAction());
+        var notepad = new NotepadHost(dataRoot);
+        registry.Register(new NotepadAction(notepad));
 
         // 3.5 自动亮暗切换：设置来自 auto_theme 条目（声明式、无热键）
         var autoTheme = new AutoThemeScheduler(
@@ -59,7 +62,7 @@ internal static class Program
 
         // 4. 注册热键，启动宿主
         string configPath = Path.Combine(dataRoot, "config.json");
-        using var app = new App(registry, log, autoTheme, configPath, singleInstance);
+        using var app = new App(registry, log, autoTheme, configPath, singleInstance, notepad);
         var failures = app.RegisterAll(entries);
         foreach (var failure in failures)
             log.Error($"注册失败: {failure}");

@@ -65,6 +65,7 @@ Interop/          P/Invoke 集中地（RegisterHotKey、SetDisplayConfig、DWM�
 - 条目：`hotkey`（可省略=声明式条目，如 `auto_theme`）、`action`、`args`
 - `display_mode`：`mode` 为 internal/extend/external/clone/toggle（`modes` 数组）
 - `theme`：`mode` 为 light/dark/toggle
+- `notepad`：无参数，切换快捷记事显示/隐藏（隐藏时复制内容到剪贴板）
 - `auto_theme`（声明式）：`latitude`/`longitude`/`offset_minutes` 或固定 `sunrise`/`sunset`；缺省回退内置默认坐标
 
 ### 已知设计决策

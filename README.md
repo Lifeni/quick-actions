@@ -11,10 +11,8 @@ Windows 常驻后台的一键动作平台：配置驱动的全局热键 → 动�
 
 把所有"一键操作"需求收敛到一个常驻程序：热键集中注册、动作按接口扩展。
 
-- 内置动作：投影切换、亮暗切换、日出日落自动亮暗
-- 托盘菜单：动作切换（带快捷键提示）、自动亮暗、开机自启、打开配置、重启应用、版本号
-
-<img src="docs/menu.png" alt="托盘菜单" width="150">
+- 内置动作：快捷记事、投影切换、亮暗切换、日出日落自动亮暗
+- 托盘菜单：快捷记事、动作切换（带快捷键提示）、自动亮暗、开机自启、打开配置、恢复配置、重启应用、版本号
 
 ## 快速开始
 
@@ -54,20 +52,25 @@ dotnet run --project src/QuickActions -- --smoke
 
 托盘右键菜单：
 
-- **切换投影 / 切换亮暗**：与对应热键一致，右侧显示快捷键（如 `F13`）
+- **快捷记事**：自写记事本（等宽字体 + 行号、代码高亮、置顶、Ctrl+S 保存、Ctrl+滚轮缩放、位置记忆），快捷键 `F13`
+- **切换投影 / 切换亮暗**：与对应热键一致，右侧显示快捷键（`F15` / `F14`）
 - **打开配置**：用默认程序打开 `%APPDATA%\QuickActions\config.json`
 - **自动亮暗**：勾选启用日出日落自动切换（重启后保持）
 - **开机自启**：写 `HKCU\...\Run`，无需管理员权限
+- **恢复配置**：删除运行时配置、注册表设置与记事本内容，恢复默认并重启（带确认对话框）
 - **重启应用**：配置只在启动时读取，修改后点此生效
 - **版本 v0.1.1**：点击跳转 GitHub 项目页
 - **退出应用**
+
+<img src="docs/menu.png" alt="托盘菜单" width="150"> <img src="docs/notepad.png" alt="快捷记事" width="220">
 
 示例：
 
 ```json
 [
-  { "hotkey": "F13", "action": "display_mode", "args": { "mode": "toggle", "modes": ["internal", "extend"] } },
-  { "hotkey": "F14", "action": "theme", "args": { "mode": "toggle" } }
+  { "hotkey": "F13", "action": "notepad" },
+  { "hotkey": "F14", "action": "theme", "args": { "mode": "toggle" } },
+  { "hotkey": "F15", "action": "display_mode", "args": { "mode": "toggle", "modes": ["internal", "extend"] } }
 ]
 ```
 

@@ -79,6 +79,18 @@ Interop/          P/Invoke 集中地（RegisterHotKey、SetDisplayConfig、DWM�
 - 配置只在启动时读取一次：修改 `config.json` 后需重启生效（托盘菜单"重启应用"，重启前先释放单实例互斥体）
 - 日志：`Logger` append-only；被占用时降级为 Null 不阻断启动
 
+## 提交规范（硬性）
+
+遵循 [Conventional Commits](https://www.conventionalcommits.org) 与原子提交原则：
+
+- **一次提交只做一件事**：按逻辑变更拆分（功能、修复、文档、重构分开），禁止把无关改动揉进同一个提交
+- 格式：`类型(范围): 一句话描述`——描述用祈使句，中文标点，中英文间加空格
+- 类型（范围可选，给出一词上下文）：
+  - `feat`：新功能　`fix`：修复缺陷　`docs`：文档（README、CHANGELOG、AGENTS）
+  - `refactor`：重构（不改行为）　`perf`：性能　`test`：测试　`chore`：杂务　`ci`：CI 配置
+- 示例：`feat(记事本): 支持 Ctrl+滚轮缩放`、`fix(菜单): 修复高 DPI 下图标溢出`、`docs: 更新 README`
+- 描述尽量简洁（≤50 字）；需要细节时空一行写正文段落
+
 ## 测试约定
 
 - 纯函数优先；P/Invoke 布局用 `Marshal.SizeOf` 断言（曾因 CCD 结构体越界崩过 testhost）

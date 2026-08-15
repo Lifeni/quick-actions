@@ -46,7 +46,7 @@ dotnet run --project src/QuickActions -- --smoke
 
 启动后弹一次"已在后台运行"通知，列出生效热键。热键支持：
 
-- 单键：`F13`~`F24`、`F1`~`F12`、字母或数字键
+- 单键：`F13`～`F24`、`F1`～`F12`、字母或数字键
 - 组合键：`Ctrl+Shift+F14`、`Alt+F13`（修饰键：`Ctrl`、`Alt`、`Shift`、`Win`）
 
 托盘右键菜单：
@@ -78,10 +78,10 @@ dotnet run --project src/QuickActions -- --smoke
 - `light` / `dark`：直接切换（广播 `WM_SETTINGCHANGE`，运行中的应用即时刷新）
 - `toggle`：切换相反值（亮 ↔ 暗）
 
-`auto_theme`（声明式条目，可选）：日出切亮色、日落切暗色，托盘菜单勾选启用。内置济南坐标（36.6512, 117.1201），不配置也能用：
+`auto_theme`（声明式条目，可选）：日出切亮色、日落切暗色，托盘菜单勾选启用。内置默认坐标，不配置也能用：
 
 ```json
-{ "action": "auto_theme", "args": { "latitude": "36.6512", "longitude": "117.1201", "offset_minutes": "0" } }
+{ "action": "auto_theme", "args": { "latitude": "纬度", "longitude": "经度", "offset_minutes": "0" } }
 ```
 
 - `latitude` / `longitude`：按日期计算（NOAA 算法，中纬度误差约几分钟；时区固定北京时间 UTC+8）
@@ -117,7 +117,7 @@ quick-actions/
 
 ## 状态
 
-可用：投影切换、亮暗切换、日出日落自动亮暗（内置济南坐标，可覆盖）、快捷键提示、开机自启、单实例守卫、Win11 风格托盘菜单、单 exe 发布（net481）。
+可用：投影切换、亮暗切换、日出日落自动亮暗（内置默认坐标，可覆盖）、快捷键提示、开机自启、单实例守卫、Win11 风格托盘菜单、单 exe 发布（net481）。
 
 ## 更新日志
 

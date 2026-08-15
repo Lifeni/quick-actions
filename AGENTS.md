@@ -74,7 +74,7 @@ Interop/          P/Invoke 集中地（RegisterHotKey、SetDisplayConfig、DWM�
 - 菜单文字垂直居中带 `TextShift` 光学补偿（CJK 墨迹不占满行盒底部的视觉修正）
 - 主题读写：`HKCU\...\Themes\Personalize` 的 AppsUseLightTheme/SystemUsesLightTheme + WM_SETTINGCHANGE 广播
 - 开机自启：`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`（用户级免管理员）
-- 日出日落：NOAA 算法（`SunTimes.cs`），参考值见测试注释（北京/特罗姆瑟）
+- 日出日落：NOAA 算法（`SunTimes.cs`），参考值见测试注释
 - 配置只在启动时读取一次：修改 `config.json` 后需重启生效（托盘菜单"重启应用"，重启前先释放单实例互斥体）
 - 日志：`Logger` append-only；被占用时降级为 Null 不阻断启动
 

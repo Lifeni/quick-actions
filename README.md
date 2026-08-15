@@ -1,6 +1,7 @@
-# quick-actions
+# <img src="docs/quick-actions.png" width="32" alt="QuickActions"> quick-actions
 
-<p align="center"><img src="docs/quick-actions.png" alt="QuickActions 图标" width="96"></p>
+![版本](https://img.shields.io/github/v/release/Lifeni/quick-actions?label=%E7%89%88%E6%9C%AC)
+![协议](https://img.shields.io/github/license/Lifeni/quick-actions?label=%E5%8D%8F%E8%AE%AE)
 
 > 本项目由 AI 协作完成：代码、文档与迭代均经 AI 生成和优化。
 
@@ -59,6 +60,8 @@ dotnet run --project src/QuickActions -- --smoke
 - **版本 v0.1.1**：点击跳转 GitHub 项目页
 - **退出应用**
 
+![托盘菜单](docs/menu.png)
+
 示例：
 
 ```json
@@ -89,16 +92,6 @@ dotnet run --project src/QuickActions -- --smoke
 - `offset_minutes`：切换点整体偏移，正数=延后
 - 极昼/极夜地区当天不切换；错过切换点会自动对账修正
 
-## 发布
-
-打 `v*` 标签（如 `v0.2.0`）推送到 GitHub 即触发 [GitHub Actions](.github/workflows/release.yml)：
-
-```bash
-git tag v0.2.0 && git push origin v0.2.0
-```
-
-自动完成：测试 → 构建 → 创建 Release（附带 `QuickActions.exe`，正文取自 [CHANGELOG.md](CHANGELOG.md) 对应版本章节）。
-
 ## 目录结构
 
 ```
@@ -114,10 +107,6 @@ quick-actions/
 ├── src/QuickActions/    # 主程序
 └── tests/QuickActions.Tests/  # 单元测试
 ```
-
-## 状态
-
-可用：投影切换、亮暗切换、日出日落自动亮暗（内置默认坐标，可覆盖）、快捷键提示、开机自启、单实例守卫、Win11 风格托盘菜单、单 exe 发布（net481）。
 
 ## 更新日志
 

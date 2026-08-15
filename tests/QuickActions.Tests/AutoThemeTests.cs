@@ -137,7 +137,7 @@ public class AutoThemeSettingsTests
     }
 
     [Fact]
-    public void FromArgs_MissingConfig_FallsBackToBeijing()
+    public void FromArgs_MissingConfig_FallsBackToDefault()
     {
         var settings = AutoThemeSettings.FromArgs(null);
 
@@ -148,10 +148,10 @@ public class AutoThemeSettingsTests
     }
 
     [Fact]
-    public void FromArgs_MissingConfig_ComputesBeijingDayTimes()
+    public void FromArgs_MissingConfig_ComputesDefaultDayTimes()
     {
         // 时区固定北京时间（UTC+8）：日出/日落时刻与机器时区无关，CI（UTC）与本地断言一致。
-        // 参考值由 NOAA 算法独立实现（Python）计算：2026-08-15 日出 05:25、日落 19:12
+        // 参考值由 NOAA 算法独立实现（Python）计算：2026-08-15 日出 05:28、日落 19:03
         var settings = AutoThemeSettings.FromArgs(null);
 
         var (rise, set, allDay) = settings.GetDayTimes(DateTime.Parse("2026-08-15 10:00"));
@@ -159,9 +159,9 @@ public class AutoThemeSettingsTests
         Assert.NotNull(rise);
         Assert.NotNull(set);
         Assert.Null(allDay);
-        Assert.InRange(rise!.Value.TimeOfDay - TimeSpan.Parse("05:25"),
+        Assert.InRange(rise!.Value.TimeOfDay - TimeSpan.Parse("05:28"),
             -TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
-        Assert.InRange(set!.Value.TimeOfDay - TimeSpan.Parse("19:12"),
+        Assert.InRange(set!.Value.TimeOfDay - TimeSpan.Parse("19:03"),
             -TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
     }
 
@@ -182,7 +182,7 @@ public class AutoThemeSettingsTests
     }
 
     [Fact]
-    public void FromArgs_OnlyOneCoordinate_FallsBackToBeijing()
+    public void FromArgs_OnlyOneCoordinate_FallsBackToDefault()
     {
         // 只给 latitude：不构成有效坐标对，回退内置默认坐标（不报错，开箱即用）
         var args = MiniJson.Parse("""{ "latitude": "39.9" }""");

@@ -328,7 +328,8 @@ public sealed class App : IDisposable
             if (result.Changed)
             {
                 _log.Info($"[{action.Name}] {result.Message}");
-                _tray.ShowBalloon("QuickActions", result.Message);
+                if (result.Notify)
+                    _tray.ShowBalloon("QuickActions", result.Message);
             }
             else
             {

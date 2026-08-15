@@ -19,18 +19,18 @@ public sealed class NotepadHost : IDisposable
         {
             _window = new NotepadWindow(_dataDir);
             _window.ShowWindow();
-            return new ActionResult(true, "已打开记事本");
+            return new ActionResult(true, "已打开记事本", Notify: false);
         }
 
         if (_window.Visible)
         {
             _window.CopyToClipboard();
             _window.HideWindow();
-            return new ActionResult(true, "已复制内容并隐藏记事本");
+            return new ActionResult(true, "已复制内容并隐藏记事本", Notify: false);
         }
 
         _window.ShowWindow();
-        return new ActionResult(true, "已显示记事本");
+        return new ActionResult(true, "已显示记事本", Notify: false);
     }
 
     /// <summary>托盘菜单入口：直接显示（不复制不隐藏）。</summary>

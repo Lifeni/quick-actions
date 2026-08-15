@@ -80,8 +80,8 @@ public sealed class NotepadWindow : Form
         var buttonBar = new FlowLayoutPanel
         {
             Dock = DockStyle.Right,
-            AutoSize = true,
-            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            AutoSize = false,          // AutoSize+Dock 会塌缩成零宽，按钮不可见，必须固定宽度
+            Width = 7 * 36 + 4,        // 7 个按钮（34+2 边距）+ 右边距
             Padding = new Padding(0, 4, 4, 4),
             BackColor = _barBg,
         };
@@ -97,7 +97,6 @@ public sealed class NotepadWindow : Form
         bar.MouseDown += OnBarMouseDown;
         bar.DoubleClick += (_, _) =>
             WindowState = WindowState == FormWindowState.Maximized ? FormWindowState.Normal : FormWindowState.Maximized;
-        Controls.Add(bar);
 
         // 编辑器 + 行号
         _editor = new RichTextBox
@@ -132,14 +131,17 @@ public sealed class NotepadWindow : Form
         _editor.Resize += (_, _) => _gutter.Invalidate();
         _editor.MouseWheel += OnEditorMouseWheel;
 
-        Controls.Add(_gutter);
-        Controls.Add(_editor);
-
         _highlightTimer.Tick += (_, _) =>
         {
             _highlightTimer.Stop();
             ApplyHighlight();
         };
+
+        // Dock 布局按 z-order 逆序处理：最后添加的（Top 栏）最先占位。
+        // 正确顺序：Fill 最先 add（最底层）、Left 次之、Top 最后 add（最顶层，最先占位）
+        Controls.Add(_editor);   // Fill，最后填充剩余区域
+        Controls.Add(_gutter);   // Left
+        Controls.Add(bar);       // Top，最先占位
 
         KeyPreview = true;
         KeyDown += OnFormKeyDown;
@@ -455,8 +457,18 @@ public sealed class NotepadWindow : Form
             g.SmoothingMode = SmoothingMode.AntiAlias;
             using (var bg = new SolidBrush(BackColor))
                 g.FillRectangle(bg, ClientRectangle);
-            if (_target.IsDisposed || _target.TextLength == 0)
+            if (_target.IsDisposed)
                 return;
+
+            if (_target.TextLength == 0)
+            {
+                // 空内容也显示第 1 行行号
+                using var emptyBrush = new SolidBrush(NumberColor);
+                using var emptyFormat = new StringFormat { Alignment = StringAlignment.Far };
+                g.DrawString("1", _target.Font, emptyBrush,
+                    new RectangleF(0, 0, Width - 6, _target.Font.Height), emptyFormat);
+                return;
+            }
 
             int firstLine = _target.GetLineFromCharIndex(_target.GetCharIndexFromPosition(new Point(2, 2)));
             int firstCharIdx = _target.GetFirstCharIndexFromLine(firstLine);

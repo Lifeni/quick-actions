@@ -8,9 +8,20 @@ public sealed class Logger : IDisposable
 
     public static Logger Open(string dataDir)
     {
-        Directory.CreateDirectory(dataDir);
-        var writer = new StreamWriter(Path.Combine(dataDir, "log.txt"), append: true) { AutoFlush = true };
-        return new Logger(writer);
+        try
+        {
+            Directory.CreateDirectory(dataDir);
+            var writer = new StreamWriter(Path.Combine(dataDir, "log.txt"), append: true) { AutoFlush = true };
+            return new Logger(writer);
+        }
+        catch (IOException)
+        {
+            return Logger.Null; // 日志文件被占用（另一实例竞态等）时降级为丢弃输出，不阻断启动
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Logger.Null;
+        }
     }
 
     /// <summary>丢弃输出的日志，供测试使用。</summary>

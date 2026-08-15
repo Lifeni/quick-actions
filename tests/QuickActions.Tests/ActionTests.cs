@@ -146,6 +146,100 @@ public class DisplayModeActionTests
     }
 }
 
+public class ThemeActionTests
+{
+    [Fact]
+    public void Action_ExposesExpectedName()
+    {
+        Assert.Equal("theme", new ThemeAction().Name);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void ParseArgs_MissingOrBlank_Throws(string? input)
+    {
+        Assert.Throws<ArgumentException>(() => ThemeAction.ParseArgs(input));
+    }
+
+    [Fact]
+    public void ParseArgs_StringArg_IsTrimmedAndLowercased()
+    {
+        Assert.Equal("dark", ThemeAction.ParseArgs(" Dark "));
+    }
+
+    [Fact]
+    public void ParseArgs_JsonObjectArg_ReadsModeProperty()
+    {
+        var json = MiniJson.Parse("""{ "mode": "light" }""");
+
+        Assert.Equal("light", ThemeAction.ParseArgs(json));
+    }
+
+    [Fact]
+    public void ParseArgs_JsonWithoutMode_Throws()
+    {
+        var json = MiniJson.Parse("""{ "other": "x" }""");
+
+        Assert.Throws<ArgumentException>(() => ThemeAction.ParseArgs(json));
+    }
+
+    [Theory]
+    [InlineData("light", "light", false)]
+    [InlineData("dark", "light", true)]
+    [InlineData("light", "dark", true)]
+    public void Decide_ExplicitMode_ComparesWithCurrent(string current, string requested, bool expectedChange)
+    {
+        var (target, isChange) = ThemeAction.Decide(current, requested);
+
+        Assert.Equal(requested, target);
+        Assert.Equal(expectedChange, isChange);
+    }
+
+    [Fact]
+    public void Decide_UnknownCurrent_ConservativelyApplies()
+    {
+        var (target, isChange) = ThemeAction.Decide(null, "dark");
+
+        Assert.Equal("dark", target);
+        Assert.True(isChange);
+    }
+
+    [Theory]
+    [InlineData("light", "dark")]
+    [InlineData("dark", "light")]
+    public void PickToggleTarget_FlipsMode(string current, string expected)
+    {
+        Assert.Equal(expected, ThemeAction.PickToggleTarget(current));
+    }
+
+    [Fact]
+    public void PickToggleTarget_UnknownCurrent_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() => ThemeAction.PickToggleTarget(null));
+    }
+
+    [Fact]
+    public void Decide_ToggleMode_ResolvesOpposite()
+    {
+        var (target, isChange) = ThemeAction.Decide("light", "toggle");
+
+        Assert.Equal("dark", target);
+        Assert.True(isChange);
+    }
+
+    [Fact]
+    public void GetCurrentMode_ReturnsLightOrDarkOrNull()
+    {
+        // 只读注册表查询，不修改主题状态；任何机器上都应返回合法值或 null（读取失败）
+        string? mode = ThemeAction.GetCurrentMode();
+
+        Assert.True(mode is null or "light" or "dark",
+            $"实际值: {mode ?? "<null>"}");
+    }
+}
+
 public class DisplayTopologyTests
 {
     [Theory]

@@ -1,9 +1,9 @@
 namespace QuickActions.Config;
 
-/// <summary>配置条目：热键 → 动作 + 参数。</summary>
+/// <summary>配置条目：热键 → 动作 + 参数。热键可省略（声明式条目，如 auto_theme，由对应组件消费）。</summary>
 public sealed class ConfigEntry
 {
-    public required string Hotkey { get; init; }
+    public string? Hotkey { get; init; }
     public required string Action { get; init; }
     public object? Args { get; init; }
 }
@@ -17,7 +17,8 @@ public sealed class ConfigStore
     private static readonly string DefaultConfigJson =
         """
         [
-          { "hotkey": "F13", "action": "display_mode", "args": { "mode": "toggle", "modes": ["internal", "extend"] } }
+          { "hotkey": "F13", "action": "display_mode", "args": { "mode": "toggle", "modes": ["internal", "extend"] } },
+          { "hotkey": "F14", "action": "theme", "args": { "mode": "toggle" } }
         ]
         """;
 
@@ -58,13 +59,13 @@ public sealed class ConfigStore
 
             var hotkey = obj.TryGet("hotkey", out var hk) ? hk as JsonString : null;
             var action = obj.TryGet("action", out var act) ? act as JsonString : null;
-            if (hotkey is null || action is null)
-                throw new InvalidDataException("配置条目缺少 hotkey/action 字符串字段");
+            if (action is null)
+                throw new InvalidDataException("配置条目缺少 action 字符串字段（hotkey 可省略）");
 
             obj.TryGet("args", out var args);
             entries.Add(new ConfigEntry
             {
-                Hotkey = hotkey.Value,
+                Hotkey = hotkey?.Value,
                 Action = action.Value,
                 Args = args,
             });

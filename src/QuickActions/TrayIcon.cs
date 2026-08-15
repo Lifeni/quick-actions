@@ -49,13 +49,13 @@ public sealed class TrayIcon : IDisposable
     }
 
     private readonly TrayWindow _window;
-    private readonly ContextMenuStrip _menu;
+    private readonly ModernMenu _menu;
     private readonly Icon _icon;
     private NotifyIconData _data;
     private bool _disposed;
 
     /// <summary>菜单由调用方构建(动作项由 App 决定),TrayIcon 负责弹出。</summary>
-    public TrayIcon(Icon icon, ContextMenuStrip menu)
+    public TrayIcon(Icon icon, ModernMenu menu)
     {
         _icon = icon;
         _menu = menu;
@@ -100,7 +100,13 @@ public sealed class TrayIcon : IDisposable
         int msg = m.LParam.ToInt32();
         // 左键/右键单击、右键菜单消息都弹出同一菜单(左键单击 = 快捷唤出)
         if (msg == WM_CONTEXTMENU || msg == WM_RBUTTONUP || msg == WM_LBUTTONUP)
-            _menu.Show(Cursor.Position);
+            ShowMenu();
+    }
+
+    /// <summary>弹出托盘菜单（Win11 风格自绘弹窗，自身激活后点击外部自动关闭）。</summary>
+    private void ShowMenu()
+    {
+        _menu.ShowAt(Cursor.Position);
     }
 
     public void Dispose()

@@ -1,4 +1,0 @@
-<?xml version="1.0"?>
-<TestSequence>
-  <Test Name="QuickActions.Tests.DisplayTopologyTests.GetCurrentMode_ReturnsKnownModeOrNull" DisplayName="QuickActions.Tests.DisplayTopologyTests.GetCurrentMode_ReturnsKnownModeOrNull" Source="C:\Users\LFN\Desktop\AI\OhMyPi\quick-actions\tests\QuickActions.Tests\bin\Debug\net9.0-windows\QuickActions.Tests.dll" Completed="False" />
-</TestSequence>

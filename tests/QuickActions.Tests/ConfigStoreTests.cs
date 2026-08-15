@@ -32,6 +32,19 @@ public class ConfigStoreTests : IDisposable
     }
 
     [Fact]
+    public void Load_EntryWithoutHotkey_IsAllowed()
+    {
+        File.WriteAllText(NewStore().Path,
+            """[ { "action": "auto_theme", "args": { "latitude": "39.9", "longitude": "116.4" } } ]""");
+
+        var entries = NewStore().Load();
+
+        Assert.Single(entries);
+        Assert.Null(entries[0].Hotkey);
+        Assert.Equal("auto_theme", entries[0].Action);
+    }
+
+    [Fact]
     public void Load_MissingRequiredFields_Throws()
     {
         File.WriteAllText(NewStore().Path, """[ { "hotkey": "F13" } ]""");
@@ -58,6 +71,8 @@ public class ConfigStoreTests : IDisposable
         Assert.True(File.Exists(store.Path));
         var entries = store.Load();
         Assert.NotEmpty(entries);
+        Assert.Contains(entries, e => e.Action == "display_mode");
+        Assert.Contains(entries, e => e.Action == "theme");
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Windows.Forms;
+using QuickActions.Actions;
 using QuickActions.Config;
 using QuickActions.Core;
 
@@ -15,24 +16,152 @@ public sealed class App : IDisposable
     private readonly TrayIcon _tray;
     private readonly HotkeyManager _hotkeys = new();
     private readonly ActionRegistry _registry;
+    private readonly AutoThemeScheduler _autoTheme;
     private readonly Logger _log;
+    private readonly string _configPath;
+    private readonly SingleInstance _singleInstance;
     private object? _toggleArgs;
+    private object? _themeArgs;
+    private readonly ModernMenuItem _displayItem;
+    private readonly ModernMenuItem _themeItem;
+    private string? _displayHotkey;
+    private string? _themeHotkey;
 
     /// <summary>菜单/默认切换参数:与配置默认一致的 internal ↔ extend 循环。</summary>
     private static readonly object DefaultToggleArgs =
         MiniJson.Parse("""{ "mode": "toggle", "modes": ["internal", "extend"] }""");
 
-    public App(ActionRegistry registry, Logger log)
+    /// <summary>菜单/默认切换参数:与配置默认一致的亮 ↔ 暗循环。</summary>
+    private static readonly object DefaultThemeArgs =
+        MiniJson.Parse("""{ "mode": "toggle" }""");
+
+    public App(ActionRegistry registry, Logger log, AutoThemeScheduler autoTheme, string configPath, SingleInstance singleInstance)
     {
         _registry = registry;
         _log = log;
+        _autoTheme = autoTheme;
+        _configPath = configPath;
+        _singleInstance = singleInstance;
 
-        var menu = new ContextMenuStrip();
-        menu.Items.Add("切换投影显示模式", null, (_, _) =>
-            Execute(_registry.Find("display_mode")!, _toggleArgs ?? DefaultToggleArgs));
-        menu.Items.Add("退出", null, (_, _) => Application.Exit());
+        var menu = new ModernMenu();
+        _displayItem = new ModernMenuItem
+        {
+            Text = "切换投影",
+            IconGlyph = "\uE7F4", // TVMonitor
+            OnClick = () => Execute(_registry.Find("display_mode")!, _toggleArgs ?? DefaultToggleArgs),
+        };
+        menu.Add(_displayItem);
+        _themeItem = new ModernMenuItem
+        {
+            Text = "切换亮暗",
+            IconGlyph = "\uE706", // Sun
+            OnClick = () => Execute(_registry.Find("theme")!, _themeArgs ?? DefaultThemeArgs),
+        };
+        menu.Add(_themeItem);
+        menu.Add(new ModernMenuItem
+        {
+            Text = "打开配置",
+            IconGlyph = "\uE713", // Settings
+            OnClick = OpenConfigFile,
+        });
+        menu.AddSeparator();
+        // 勾选项：只显示勾选位，不再叠加图标（与 Win11 惯例一致，避免重复视觉）
+        menu.Add(new ModernMenuItem
+        {
+            Text = "自动亮暗",
+            Checkable = true,
+            IsChecked = () => _autoTheme.Enabled,
+            OnClick = ToggleAutoTheme,
+        });
+        menu.Add(new ModernMenuItem
+        {
+            Text = "开机自启",
+            Checkable = true,
+            IsChecked = AutoStart.IsEnabled,
+            OnClick = ToggleAutoStart,
+        });
+        menu.AddSeparator();
+        menu.Add(new ModernMenuItem
+        {
+            Text = "重启应用",
+            IconGlyph = "\uE72C", // Refresh
+            OnClick = RestartApp,
+        });
+        menu.Add(new ModernMenuItem
+        {
+            Text = "退出应用",
+            IconGlyph = "\uE711", // Close
+            OnClick = () => Application.Exit(),
+        });
 
         _tray = new TrayIcon(LoadTrayIcon(), menu);
+    }
+
+    private void ToggleAutoTheme()
+    {
+        if (_autoTheme.Enabled)
+        {
+            _autoTheme.Stop();
+            return;
+        }
+
+        string? error = _autoTheme.TryStart();
+        if (error is not null)
+        {
+            _log.Error($"自动亮暗切换启用失败: {error}");
+            _tray.ShowBalloon("QuickActions", $"自动亮暗切换启用失败：{error}");
+        }
+    }
+
+    /// <summary>用系统默认程序打开配置文件（记事本/关联编辑器）。</summary>
+    private void OpenConfigFile()
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo(_configPath) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"打开配置文件失败: {ex}");
+            _tray.ShowBalloon("QuickActions", $"打开配置文件失败：{ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 重启应用（配置只在启动时读取一次，修改后需重启生效）。
+    /// 先释放单实例互斥体再启动新实例，否则新进程会被单实例守卫挡掉；
+    /// 启动失败则不退出，继续运行。
+    /// </summary>
+    private void RestartApp()
+    {
+        try
+        {
+            string? exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+            if (string.IsNullOrEmpty(exePath))
+                throw new InvalidOperationException("无法定位当前可执行文件路径");
+
+            _singleInstance.Release();
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exePath)
+            {
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"重启失败: {ex}");
+            _tray.ShowBalloon("QuickActions", $"重启失败：{ex.Message}");
+            return;
+        }
+        Application.Exit();
+    }
+
+    private static void ToggleAutoStart()
+    {
+        if (AutoStart.IsEnabled())
+            AutoStart.Disable();
+        else
+            AutoStart.Enable();
     }
 
     /// <summary>注册全部配置条目；返回失败项列表（热键冲突、格式错误、未知动作），不中断其余注册。
@@ -44,9 +173,25 @@ public sealed class App : IDisposable
 
         foreach (var entry in entries)
         {
-            // 记录第一条 display_mode 条目的参数,托盘菜单"切换投影显示模式"与热键行为保持一致
+            // 声明式条目（无热键，如 auto_theme）：由对应组件消费，不注册热键
+            if (entry.Hotkey is null)
+                continue;
+
+            // 记录第一条 display_mode 条目的参数与热键,托盘菜单"切换投影显示模式"与热键行为保持一致
             if (entry.Action == "display_mode" && _toggleArgs is null)
+            {
                 _toggleArgs = entry.Args;
+                _displayHotkey = entry.Hotkey;
+                _displayItem.Shortcut = _displayHotkey;
+            }
+
+            // 记录第一条 theme 条目的参数与热键,托盘菜单"切换亮色/暗色模式"与热键行为保持一致
+            if (entry.Action == "theme" && _themeArgs is null)
+            {
+                _themeArgs = entry.Args;
+                _themeHotkey = entry.Hotkey;
+                _themeItem.Shortcut = _themeHotkey;
+            }
 
             if (!HotkeyParser.TryParse(entry.Hotkey, out var hotkey, out var parseError))
             {

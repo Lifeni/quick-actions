@@ -1,3 +1,4 @@
 [
-  { "hotkey": "F13", "action": "display_mode", "args": { "mode": "toggle", "modes": ["internal", "extend"] } }
+  { "hotkey": "F13", "action": "display_mode", "args": { "mode": "toggle", "modes": ["internal", "extend"] } },
+  { "hotkey": "F14", "action": "theme", "args": { "mode": "toggle" } }
 ]

@@ -33,3 +33,4 @@ target/
 # .NET 构建输出
 bin/
 obj/
+TestResults/

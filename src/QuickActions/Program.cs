@@ -1,8 +1,8 @@
+using System.Drawing;
 using System.Windows.Forms;
 using QuickActions.Actions;
 using QuickActions.Config;
 using QuickActions.Core;
-
 namespace QuickActions;
 
 internal static class Program
@@ -10,6 +10,13 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        bool smoke = args.Contains("--smoke", StringComparer.OrdinalIgnoreCase);
+
+        // 单实例守卫：常驻模式下第二个实例直接退出（防日志互斥崩溃与热键冲突）
+        using var singleInstance = new SingleInstance();
+        if (!smoke && !singleInstance.Owned)
+            return 0;
+
         // .NET Framework 4.8.1：手写初始化（PerMonitorV2 由 app.manifest 声明）
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
@@ -19,8 +26,6 @@ internal static class Program
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QuickActions");
         using var log = Logger.Open(dataRoot);
         log.Info("QuickActions 启动");
-
-        bool smoke = args.Contains("--smoke", StringComparer.OrdinalIgnoreCase);
 
         // 1. 确保配置存在（首次运行自举默认配置）
         var configStore = new ConfigStore(Path.Combine(dataRoot, "config.json"));
@@ -44,9 +49,17 @@ internal static class Program
         // 3. 注册内置动作
         var registry = new ActionRegistry();
         registry.Register(new DisplayModeAction());
+        registry.Register(new ThemeAction());
+
+        // 3.5 自动亮暗切换：设置来自 auto_theme 条目（声明式、无热键）
+        var autoTheme = new AutoThemeScheduler(
+            registry.Find("theme")!,
+            AutoThemeSettings.FromArgs(entries.FirstOrDefault(e => e.Action == "auto_theme")?.Args),
+            log);
 
         // 4. 注册热键，启动宿主
-        using var app = new App(registry, log);
+        string configPath = Path.Combine(dataRoot, "config.json");
+        using var app = new App(registry, log, autoTheme, configPath, singleInstance);
         var failures = app.RegisterAll(entries);
         foreach (var failure in failures)
             log.Error($"注册失败: {failure}");
@@ -56,6 +69,14 @@ internal static class Program
             string? current = DisplayTopology.GetCurrentMode();
             log.Info($"smoke: 配置条目 {entries.Count},注册失败 {failures.Count},当前拓扑 {current ?? "未知"}");
             return failures.Count == 0 ? 0 : 1;
+        }
+
+        // 5. 恢复上次启用的自动亮暗切换（smoke 模式不执行；设置缺失等错误只记日志不弹框）
+        if (AutoThemeScheduler.GetEnabledFlag())
+        {
+            string? error = autoTheme.TryStart();
+            if (error is not null)
+                log.Error($"自动亮暗切换启动失败: {error}");
         }
 
         if (failures.Count > 0)

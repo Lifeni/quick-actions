@@ -89,12 +89,25 @@ dotnet run --project src/QuickActions -- --smoke
 - `offset_minutes`：切换点整体偏移，正数=延后
 - 极昼/极夜地区当天不切换；错过切换点会自动对账修正
 
+## 发布
+
+打 `v*` 标签（如 `v0.2.0`）推送到 GitHub 即触发 [GitHub Actions](.github/workflows/release.yml)：
+
+```bash
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+自动完成：测试 → 构建 → 创建 Release（附带 `QuickActions.exe`，正文取自 [CHANGELOG.md](CHANGELOG.md) 对应版本章节）。
+
 ## 目录结构
 
 ```
 quick-actions/
 ├── AGENTS.md        # AI Agent 开发指南(架构/约定/测试规范)
+├── CHANGELOG.md     # 更新日志(Release 正文来源)
 ├── LICENSE          # MIT 开源协议
+├── QuickActions.sln # 解决方案文件
+├── .github/         # GitHub Actions 工作流(构建并发布 Release)
 ├── config/          # 配置模板(运行时数据在 %APPDATA%\QuickActions)
 ├── docs/            # 设计文档与素材
 ├── scripts/         # 开发/运维脚本

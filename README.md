@@ -1,5 +1,7 @@
 # quick-actions
 
+<p align="center"><img src="docs/quick-actions.png" alt="QuickActions 图标" width="96"></p>
+
 > 本项目由 AI 协作完成：代码、文档与迭代均经 AI 生成和优化。
 
 Windows 常驻后台的一键动作平台：配置驱动的全局热键 → 动作框架。无主界面，通过系统托盘管理。
@@ -9,7 +11,7 @@ Windows 常驻后台的一键动作平台：配置驱动的全局热键 → 动�
 把所有"一键操作"需求收敛到一个常驻程序里，热键集中注册、动作按接口扩展：
 
 - 当前内置动作：切换投影模式（仅当前屏幕或扩展模式）、切换 Windows 亮色/暗色模式、按日出日落自动切换亮暗
-- 托盘菜单：投影/亮暗手动切换、自动亮暗开关、开机自启动开关
+- 托盘菜单：投影/亮暗切换（带快捷键提示）、自动亮暗开关、开机自启开关、打开配置、重启应用
 - 后续动作（规划）：切换音频输出设备、静音麦克风、一键打开常用软件等
 
 ## 快速开始
@@ -22,6 +24,9 @@ dotnet run --project src/QuickActions
 
 # 发布 Release(输出到 dist/)
 dotnet publish src/QuickActions/QuickActions.csproj -c Release -o dist
+
+# 冒烟检查(不常驻,验证配置加载与热键注册)
+dotnet run --project src/QuickActions -- --smoke
 ```
 
 ## 技术栈
@@ -32,6 +37,7 @@ dotnet publish src/QuickActions/QuickActions.csproj -c Release -o dist
 - P/Invoke：`RegisterHotKey`（全局热键）、`SetDisplayConfig`（投影拓扑）、`QueryDisplayConfig`（当前拓扑）、`SendMessageTimeout`（WM_SETTINGCHANGE 主题刷新广播）；主题状态读写用内置 `Microsoft.Win32.Registry`
 - 内置 MiniJson 解析器，零外部依赖，发布产物为单个 exe（约 76KB）
 - 高 DPI：app.manifest 声明 PerMonitorV2
+- 单实例守卫：命名 Mutex，重复启动自动退出；"重启应用"先释放互斥体再拉起新实例
 
 ## 配置
 
@@ -89,8 +95,10 @@ dotnet publish src/QuickActions/QuickActions.csproj -c Release -o dist
 
 ```
 quick-actions/
+├── AGENTS.md        # AI Agent 开发指南(架构/约定/测试规范)
+├── LICENSE          # MIT 开源协议
 ├── config/          # 配置模板(运行时数据在 %APPDATA%\QuickActions)
-├── docs/            # 设计文档
+├── docs/            # 设计文档与素材
 ├── scripts/         # 开发/运维脚本
 ├── src/QuickActions/    # 主程序
 └── tests/QuickActions.Tests/  # 单元测试
@@ -98,7 +106,7 @@ quick-actions/
 
 ## 状态
 
-可用：投影切换（toggle 与指定模式）、Windows 亮暗切换（toggle 与指定模式）、日出日落自动亮暗（内置济南坐标，可覆盖）、开机自启动开关、Win11 风格托盘菜单、自定义托盘与气泡、单 exe 发布（net481）。
+可用：投影切换（toggle 与指定模式）、Windows 亮暗切换（toggle 与指定模式）、日出日落自动亮暗（内置济南坐标，可覆盖）、快捷键提示、开机自启开关、单实例守卫、Win11 风格托盘菜单、自定义托盘与气泡、单 exe 发布（net481）。
 
 ## 开源协议
 

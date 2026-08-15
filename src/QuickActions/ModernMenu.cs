@@ -56,12 +56,11 @@ public sealed class ModernMenu : IDisposable
 internal sealed class MenuForm : Form
 {
     // 96DPI 基准尺寸，实际按目标显示器 DPI 缩放。
-    // 上下/左右边距统一为 6（PadY=PadX），四周等距；
-    // CheckCol 与 IconCol 同宽（28），保证勾选项文字与图标项文字左对齐
+    // 上下/左右边距统一（PadY=PadX），四周等距；文字与图标离边距留有余量
     private const int RowHeight = 32;
     private const int SeparatorRow = 10;
-    private const int PadY = 6;
-    private const int PadX = 6;
+    private const int PadY = 8;
+    private const int PadX = 8;
     private const int CheckCol = 28;
     private const int IconCol = 28;
     private const float CornerRadius = 6f;

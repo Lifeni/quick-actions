@@ -5,6 +5,8 @@
 
 > 本项目由 AI 协作完成：代码、文档与迭代均经 AI 生成和优化。
 
+<p align="right"><img src="docs/menu.png" alt="托盘菜单" width="150"></p>
+
 Windows 常驻后台的一键动作平台：配置驱动的全局热键 → 动作框架。无主界面，通过系统托盘管理。
 
 ## 定位
@@ -59,8 +61,6 @@ dotnet run --project src/QuickActions -- --smoke
 - **重启应用**：配置只在启动时读取，修改后点此生效
 - **版本 v0.1.1**：点击跳转 GitHub 项目页
 - **退出应用**
-
-![托盘菜单](docs/menu.png)
 
 示例：
 

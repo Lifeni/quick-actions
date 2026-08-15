@@ -103,6 +103,14 @@ public sealed class App : IDisposable
         _tray = new TrayIcon(LoadTrayIcon(), menu);
     }
 
+    /// <summary>动作名 → 中文显示名（启动通知列出生效热键时使用）。</summary>
+    private static string ActionDisplayName(string action) => action switch
+    {
+        "display_mode" => "切换投影",
+        "theme" => "切换亮暗",
+        _ => action,
+    };
+
     private void ToggleAutoTheme()
     {
         if (_autoTheme.Enabled)
@@ -240,7 +248,7 @@ public sealed class App : IDisposable
                 continue;
             }
 
-            registered.Add(entry.Hotkey);
+            registered.Add($"{entry.Hotkey}（{ActionDisplayName(entry.Action)}）");
             _log.Info($"热键 {entry.Hotkey} → {entry.Action} 已注册");
         }
 

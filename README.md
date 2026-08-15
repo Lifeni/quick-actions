@@ -14,6 +14,8 @@ Windows 常驻后台的一键动作平台：配置驱动的全局热键 → 动�
 - 内置动作：快捷记事、投影切换、亮暗切换、日出日落自动亮暗
 - 托盘菜单：快捷记事、动作切换（带快捷键提示）、自动亮暗、开机自启、打开配置、恢复配置、重启应用、版本号
 
+<img src="docs/screenshot.png" alt="快捷记事" width="630">
+
 ## 快速开始
 
 ```bash
@@ -62,7 +64,6 @@ dotnet run --project src/QuickActions -- --smoke
 - **版本 v0.1.1**：点击跳转 GitHub 项目页
 - **退出应用**
 
-<img src="docs/menu.png" alt="托盘菜单" width="150"> <img src="docs/notepad.png" alt="快捷记事" width="220">
 
 示例：
 

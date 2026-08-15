@@ -1,0 +1,26 @@
+name: 构建并发布 Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 测试
+        run: dotnet test tests/QuickActions.Tests/QuickActions.Tests.csproj -c Release
+
+      - name: 发布产物
+        run: dotnet publish src/QuickActions/QuickActions.csproj -c Release -o dist
+
+      - name: 上传 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/QuickActions.exe
+          generate_release_notes: true

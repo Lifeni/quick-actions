@@ -35,7 +35,7 @@ dotnet run --project src/QuickActions -- --smoke
 - WinForms 无窗口消息泵宿主 + 自管系统托盘（自定义气泡图标）
 - 自绘 Win11 风格托盘菜单：DWM 圆角实色卡片（双缓冲防闪烁），亮/暗跟随系统主题，Segoe Fluent Icons 图标
 - P/Invoke：`RegisterHotKey`（全局热键）、`SetDisplayConfig`（投影拓扑）、`QueryDisplayConfig`（当前拓扑）、`SendMessageTimeout`（WM_SETTINGCHANGE 主题刷新广播）；主题状态读写用内置 `Microsoft.Win32.Registry`
-- 内置 MiniJson 解析器，零外部依赖，发布产物为单个 exe（约 76KB）
+- 内置 MiniJson 解析器，零外部依赖，发布产物为单个 exe（约 100KB）
 - 高 DPI：app.manifest 声明 PerMonitorV2
 - 单实例守卫：命名 Mutex，重复启动自动退出；"重启应用"先释放互斥体再拉起新实例
 

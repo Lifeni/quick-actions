@@ -9,13 +9,16 @@ namespace QuickActions.Actions;
 /// <summary>
 /// 自动亮暗切换的设置：默认内置济南坐标（未配置即用），需要覆盖时在 config.json 加
 /// auto_theme 条目（声明式、无热键）。两种覆盖模式：latitude/longitude（日出日落按日期计算，
-/// 时区取系统当前时区）或 sunrise/sunset（固定时间 "HH:mm"）。offset_minutes 可选，对切换点整体偏移（正=延后）。
+/// 时区固定北京时间 UTC+8，不随机器时区变化）或 sunrise/sunset（固定时间 "HH:mm"）。offset_minutes 可选，对切换点整体偏移（正=延后）。
 /// </summary>
 public sealed class AutoThemeSettings
 {
-    /// <summary>内置默认坐标：济南（未配置时使用；时区取系统当前时区，UTC+8 即北京时间）。</summary>
+    /// <summary>内置默认坐标：济南（未配置时使用；时区固定北京时间，不随坐标/机器变化）。</summary>
     public const double DefaultLatitude = 36.6512;
     public const double DefaultLongitude = 117.1201;
+
+    /// <summary>固定北京时间偏移（中国标准时间，无夏令时）。日出日落按北京时间判定，不随机器时区变化。</summary>
+    public static readonly TimeSpan ChinaOffset = TimeSpan.FromHours(8);
 
     public double? Latitude { get; private set; }
     public double? Longitude { get; private set; }
@@ -71,8 +74,7 @@ public sealed class AutoThemeSettings
         if (Latitude is null || Longitude is null)
             return (null, null, null);
 
-        var times = SunTimes.GetDayTimes(localNow.Date, Latitude.Value, Longitude.Value,
-            TimeZoneInfo.Local.GetUtcOffset(localNow));
+        var times = SunTimes.GetDayTimes(localNow.Date, Latitude.Value, Longitude.Value, ChinaOffset);
         return (times.Sunrise + Offset, times.Sunset + Offset, times.AllDay);
     }
 
@@ -162,7 +164,8 @@ public sealed class AutoThemeScheduler : IDisposable
     {
         try
         {
-            DateTime now = DateTime.Now;
+            // 统一按北京时间判定：机器时区可能不是 UTC+8，用 UTC 换算避免偏差
+            DateTime now = DateTime.UtcNow + AutoThemeSettings.ChinaOffset;
             var (sunrise, sunset, allDay) = _settings.GetDayTimes(now);
             string? target = TargetFor(now, sunrise, sunset, allDay);
 

@@ -19,8 +19,18 @@ jobs:
       - name: 发布产物
         run: dotnet publish src/QuickActions/QuickActions.csproj -c Release -o dist
 
+      - name: 提取更新日志为 Release 正文
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $content = Get-Content CHANGELOG.md -Raw
+          $pat = "(?s)##\s*\[" + [regex]::Escape($tag) + "\].*?(?=\r?\n##\s|\z)"
+          $m = [regex]::Match($content, $pat)
+          if (-not $m.Success) { Write-Error "CHANGELOG.md 缺少 [$tag] 章节" }
+          Set-Content -Path release_body.md -Value $m.Value -Encoding utf8
+
       - name: 上传 GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/QuickActions.exe
-          generate_release_notes: true
+          body_path: release_body.md

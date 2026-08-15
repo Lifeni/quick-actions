@@ -89,6 +89,12 @@ public sealed class App : IDisposable
         });
         menu.Add(new ModernMenuItem
         {
+            Text = $"版本 v{GetVersion()}",
+            IconGlyph = "\uE774", // Globe
+            OnClick = OpenGitHubPage,
+        });
+        menu.Add(new ModernMenuItem
+        {
             Text = "退出应用",
             IconGlyph = "\uE711", // Close
             OnClick = () => Application.Exit(),
@@ -125,6 +131,28 @@ public sealed class App : IDisposable
         {
             _log.Error($"打开配置文件失败: {ex}");
             _tray.ShowBalloon("QuickActions", $"打开配置文件失败：{ex.Message}");
+        }
+    }
+
+    /// <summary>项目 GitHub 仓库地址（版本菜单项点击跳转）。</summary>
+    private const string GitHubUrl = "https://github.com/Lifeni/quick-actions";
+
+    /// <summary>读取程序集版本号（csproj 的 Version，如 0.1.0）。</summary>
+    private static string GetVersion()
+        => System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
+
+    /// <summary>用系统默认浏览器打开 GitHub 项目页。</summary>
+    private void OpenGitHubPage()
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo(GitHubUrl) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"打开 GitHub 页面失败: {ex}");
+            _tray.ShowBalloon("QuickActions", $"打开 GitHub 页面失败：{ex.Message}");
         }
     }
 
